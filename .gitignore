@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.git/
+.env
+"**/*.env"
+.vscode
+*.zip
+**/*-secret.yaml
