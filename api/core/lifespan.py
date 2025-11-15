@@ -1,20 +1,22 @@
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
-
-from api.connectors.postgres_connector import PostgresConnector
+import asyncpg
+from api.core.config import settings
+from api.core.db_codecs import register_vector_codec
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    db_connector = PostgresConnector()
-    await db_connector.connect()
-    app.state.db_connector = db_connector
-    print("Postgres Connector Connected")
+    pool = await asyncpg.create_pool(settings.DATABASE_URL, init=register_vector_codec)
+    if pool is None:
+        raise Exception("Could not connect to the database")
+
+    app.state.db_pool = pool
+    print("Asyncpg Pool Connected (with vector codec)")
 
     yield
 
     # Shutdown
-    await app.state.db_connector.disconnect()
-    print("Postgres Connector Disconnected")
+    await app.state.db_pool.close()
+    print("Asyncpg Pool Disconnected")
