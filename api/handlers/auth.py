@@ -1,10 +1,11 @@
 from datetime import timedelta, datetime, timezone
 from uuid import uuid4
-from fastapi import HTTPException, Depends, Response, Request
+
+from fastapi import HTTPException, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
+
 from api.repositories.auth_repo import AuthRepository
 from api.core.config import settings
-from api.core.dependencies import get_current_user, get_auth_repository
 from api.core.security import (
     verify_password,
     get_password_hash,

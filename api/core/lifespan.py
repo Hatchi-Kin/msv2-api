@@ -1,6 +1,7 @@
+import asyncpg
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-import asyncpg
+
 from api.core.config import settings
 from api.core.db_codecs import register_vector_codec
 

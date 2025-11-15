@@ -1,14 +1,15 @@
 from fastapi import APIRouter, Depends, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
+
+from api.core.dependencies import get_current_user, get_auth_repository
+from api.models.auth import UserCreate, Token, User, UserInDB
+from api.repositories.auth_repo import AuthRepository
 from api.handlers.auth import (
     register_user_handler,
     login_handler,
     refresh_token_handler,
     logout_handler,
 )
-from api.models.auth import UserCreate, Token, User, UserInDB
-from api.core.dependencies import get_current_user, get_auth_repository
-from api.repositories.auth_repo import AuthRepository
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

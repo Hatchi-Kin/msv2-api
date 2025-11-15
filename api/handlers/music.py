@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+
 from api.repositories.music_repo import MusicRepository
 from api.models.music import ArtistList, AlbumList
 
