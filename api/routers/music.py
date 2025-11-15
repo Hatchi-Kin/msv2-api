@@ -23,28 +23,25 @@ async def get_song_count_endpoint(music_repo: MusicRepo, _user: CurrentUser):
 
 @router.get("/random_song", response_model=MegasetTrack)
 async def get_random_song_endpoint(
+    music_repo: MusicRepo,
+    _user: CurrentUser,
     include_embeddings: bool = False,
-    music_repo: MusicRepo = None,
-    _user: CurrentUser = None,
 ):
-    """Get a random song."""
     return await get_random_song_handler(include_embeddings, music_repo)
 
 
 @router.get("/song/{song_id}", response_model=MegasetTrack)
 async def get_song_by_id_endpoint(
     song_id: int,
+    music_repo: MusicRepo,
+    _user: CurrentUser,
     include_embeddings: bool = False,
-    music_repo: MusicRepo = None,
-    _user: CurrentUser = None,
 ):
-    """Get song by ID."""
     return await get_song_by_id_handler(song_id, include_embeddings, music_repo)
 
 
 @router.get("/artists", response_model=ArtistList)
 async def get_artist_list_endpoint(music_repo: MusicRepo, _user: CurrentUser):
-    """Get all artists."""
     return await get_artist_list_handler(music_repo)
 
 
@@ -54,30 +51,27 @@ async def get_album_list_from_artist_endpoint(
     music_repo: MusicRepo,
     _user: CurrentUser,
 ):
-    """Get albums for artist."""
     return await get_album_list_from_artist_handler(artist_name, music_repo)
 
 
 @router.get("/tracks/{album_folder}", response_model=TrackList)
 async def get_tracklist_from_album_endpoint(
+    music_repo: MusicRepo,
+    _user: CurrentUser,
     album_folder: str,
     include_embeddings: bool = False,
-    music_repo: MusicRepo = None,
-    _user: CurrentUser = None,
 ):
-    """Get tracks from album."""
     return await get_tracklist_from_album_handler(album_folder, include_embeddings, music_repo)
 
 
 @router.get("/tracks/{artist_name}/{album_name}", response_model=TrackList)
 async def get_tracklist_from_artist_and_album_endpoint(
+    music_repo: MusicRepo,
+    _user: CurrentUser,
     artist_name: str,
     album_name: str,
     include_embeddings: bool = False,
-    music_repo: MusicRepo = None,
-    _user: CurrentUser = None,
 ):
-    """Get tracks from artist and album."""
     return await get_tracklist_from_artist_and_album_handler(
         artist_name, album_name, include_embeddings, music_repo
     )

@@ -52,12 +52,6 @@ class MusicRepository:
                 artist_name,
             )
             return [row["album_folder"] for row in rows if row["album_folder"]]
-        async with self.pool.acquire() as conn:
-            rows = await conn.fetch(
-                "SELECT DISTINCT album_folder FROM megaset WHERE artist_folder = $1;",
-                artist_name,
-            )
-            return [row["album_folder"] for row in rows if row["album_folder"]]
 
     async def get_tracklist_from_album(self, album_name: str, include_embeddings: bool = False) -> TrackList:
         columns = self._get_columns(include_embeddings)

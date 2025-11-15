@@ -43,7 +43,7 @@ async def refresh_token_endpoint(
 @router.post("/logout")
 async def logout_endpoint(
     response: Response,
-    current_user: UserInDB = Depends(get_current_user),  # <--- Type hint changed to UserInDB
+    current_user: UserInDB = Depends(get_current_user),
     auth_repo: AuthRepository = Depends(get_auth_repository),
 ):
     return await logout_handler(response, current_user, auth_repo)
