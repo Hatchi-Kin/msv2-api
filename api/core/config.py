@@ -50,7 +50,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://localhost",
         "http://127.0.0.1",
-        "http://msv2-webapp.192.168.1.20.nip.io/"
+        "http://msv2-webapp.192.168.1.20.nip.io"
     ]
 
 
