@@ -42,7 +42,7 @@ class MusicRepository:
 
     async def get_artist_list(self) -> list[str]:
         async with self.pool.acquire() as conn:
-            rows = await conn.fetch("SELECT DISTINCT artist_folder FROM megaset;")
+            rows = await conn.fetch("SELECT DISTINCT artist_folder FROM megaset ORDER BY artist_folder;")
             return [row["artist_folder"] for row in rows if row["artist_folder"]]
 
     async def get_album_list_from_artist(self, artist_name: str) -> list[str]:
