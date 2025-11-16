@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from api.core.dependencies import MusicRepo, CurrentUser
-from api.models.music import MegasetTrack, ArtistList, AlbumList, TrackList
+from api.models.music import MegasetTrack, ArtistList, AlbumList, TrackList, SimilarTrackList
 from api.handlers.music import (
     get_random_song_handler,
     get_song_count_handler,
@@ -10,6 +10,7 @@ from api.handlers.music import (
     get_album_list_from_artist_handler,
     get_tracklist_from_album_handler,
     get_tracklist_from_artist_and_album_handler,
+    get_similar_tracks_handler,
 )
 
 router = APIRouter(prefix="/music", tags=["Music Metadata"])
@@ -81,3 +82,13 @@ async def get_tracklist_from_artist_and_album_endpoint(
     return await get_tracklist_from_artist_and_album_handler(
         artist_name, album_name, include_embeddings, music_repo
     )
+
+
+@router.get("/similar/{track_id}", response_model=SimilarTrackList)
+async def get_similar_tracks_endpoint(
+    _user: CurrentUser,
+    track_id: int,
+    music_repo: MusicRepo,
+):
+    """Get 9 similar tracks with artist diversity filtering."""
+    return await get_similar_tracks_handler(track_id, music_repo)

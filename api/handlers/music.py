@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from api.repositories.music_repo import MusicRepository
-from api.models.music import ArtistList, AlbumList
+from api.models.music import ArtistList, AlbumList, SimilarTrack, SimilarTrackList
 
 
 async def get_song_count_handler(music_repo: MusicRepository) -> int:
@@ -57,3 +57,44 @@ async def get_tracklist_from_artist_and_album_handler(
     if not tracklist.tracks:
         raise HTTPException(status_code=404, detail="No tracks found for the given artist and album.")
     return tracklist
+
+
+async def get_similar_tracks_handler(track_id: int, music_repo: MusicRepository) -> SimilarTrackList:
+    """
+    Get 9 similar tracks with artist diversity filtering.
+    Queries for 30 similar tracks, then filters to max 1 per artist.
+    """
+    # Get the original track to exclude its artist from recommendations
+    original_track = await music_repo.get_song_by_id(track_id, include_embeddings=False)
+    if not original_track:
+        raise HTTPException(status_code=404, detail="Track not found.")
+    
+    # Get 30 similar tracks from pgvector
+    similar_tracks = await music_repo.get_similar_tracks(track_id, limit=30)
+    
+    if not similar_tracks:
+        raise HTTPException(status_code=404, detail="No similar tracks found.")
+    
+    # Apply artist diversity filter (max 1 track per artist)
+    # Start with the original track's artist already in the set
+    seen_artists = {original_track.artist} if original_track.artist else set()
+    filtered_tracks = []
+    fallback_tracks = []
+    
+    for track, distance in similar_tracks:
+        similar_track = SimilarTrack(track=track, similarity_score=distance)
+        
+        if track.artist not in seen_artists:
+            filtered_tracks.append(similar_track)
+            seen_artists.add(track.artist)
+        else:
+            fallback_tracks.append(similar_track)
+        
+        if len(filtered_tracks) == 9:
+            break
+    
+    # If we don't have 9 unique artists, fill with fallback tracks
+    if len(filtered_tracks) < 9:
+        filtered_tracks.extend(fallback_tracks[:9 - len(filtered_tracks)])
+    
+    return SimilarTrackList(tracks=filtered_tracks)

@@ -33,3 +33,12 @@ class AlbumList(BaseModel):
 
 class TrackList(BaseModel):
     tracks: List[MegasetTrack]
+
+
+class SimilarTrack(BaseModel):
+    track: MegasetTrack
+    similarity_score: float
+
+
+class SimilarTrackList(BaseModel):
+    tracks: List[SimilarTrack]

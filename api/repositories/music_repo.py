@@ -72,3 +72,37 @@ class MusicRepository:
             rows = await conn.fetch(query, artist_name, album_name)
             tracks = [MegasetTrack(**dict(row)) for row in rows]
             return TrackList(tracks=tracks)
+
+    async def get_similar_tracks(self, track_id: int, limit: int = 30) -> list[tuple[MegasetTrack, float]]:
+        """
+        Get similar tracks using pgvector cosine distance.
+        Returns a list of tuples: (track, distance_score)
+        """
+        query = """
+            WITH target AS (
+                SELECT embedding_512_vector 
+                FROM megaset 
+                WHERE id = $1
+            )
+            SELECT 
+                m.id, m.filename, m.filepath, m.relative_path, m.album_folder, 
+                m.artist_folder, m.filesize, m.title, m.artist, m.album, 
+                m.year, m.tracknumber, m.genre, m.top_5_genres, m.created_at,
+                (m.embedding_512_vector <=> (SELECT embedding_512_vector FROM target)) as distance
+            FROM megaset m, target
+            WHERE m.id != $1 
+                AND m.embedding_512_vector IS NOT NULL
+                AND (SELECT embedding_512_vector FROM target) IS NOT NULL
+            ORDER BY distance
+            LIMIT $2;
+        """
+
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(query, track_id, limit)
+            results = []
+            for row in rows:
+                row_dict = dict(row)
+                distance = row_dict.pop('distance')
+                track = MegasetTrack(**row_dict)
+                results.append((track, float(distance)))
+            return results
