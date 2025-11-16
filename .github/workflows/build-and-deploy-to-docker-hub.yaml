@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE: hatchikin/glasgow-fastapi
+  DOCKER_IMAGE: hatchikin/msv2-api
   REGISTRY: docker.io
 
 jobs:
