@@ -55,12 +55,11 @@ class MusicRepository:
 
     async def get_tracklist_from_album(self, album_name: str, include_embeddings: bool = False) -> TrackList:
         columns = self._get_columns(include_embeddings)
-        query = f"SELECT {columns} FROM megaset WHERE album_folder = $1;"
-
+        query = f"SELECT {columns} FROM megaset WHERE album_folder = $1 ORDER BY tracknumber;"
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(query, album_name)
             tracks = [MegasetTrack(**dict(row)) for row in rows]
-            return TrackList(tracks=tracks)
+        return TrackList(tracks=tracks)
 
     async def get_tracklist_from_artist_and_album(
         self, artist_name: str, album_name: str, include_embeddings: bool = False
