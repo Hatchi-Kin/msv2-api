@@ -30,10 +30,10 @@ async def get_track_by_id_handler(
 
 async def get_artist_list_handler(music_repo: MusicRepository, limit: int = 100, offset: int = 0):
     artists = await music_repo.get_artist_list(limit, offset)
-    count = await music_repo.get_artist_count()
+    total = await music_repo.get_artist_count()
     if not artists:
         raise HTTPException(status_code=404, detail="No artists found in the database.")
-    return ArtistList(artists=artists, count=count)
+    return ArtistList(artists=artists, total=total)
 
 
 async def get_album_list_from_artist_handler(artist_name: str, music_repo: MusicRepository):
