@@ -25,6 +25,7 @@ class MegasetTrack(BaseModel):
 
 class ArtistList(BaseModel):
     artists: List[str]
+    total: int
 
 
 class AlbumList(BaseModel):
