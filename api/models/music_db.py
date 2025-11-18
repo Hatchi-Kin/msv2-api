@@ -4,6 +4,9 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 
+# ----------------------------------------------- #
+
+
 class MegasetTrack(BaseModel):
     id: int
     filename: str
@@ -43,3 +46,39 @@ class SimilarTrack(BaseModel):
 
 class SimilarTrackList(BaseModel):
     tracks: List[SimilarTrack]
+
+
+# ----------------------------------------------- #
+
+
+class FavoritesList(BaseModel):
+    tracks: List[MegasetTrack]
+    total: int
+
+
+class PlaylistSummary(BaseModel):
+    id: int
+    name: str
+    track_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class PlaylistsList(BaseModel):
+    playlists: List[PlaylistSummary]
+
+
+class PlaylistDetail(BaseModel):
+    id: int
+    name: str
+    tracks: List[MegasetTrack]
+    created_at: datetime
+    updated_at: datetime
+
+
+class CreatePlaylistRequest(BaseModel):
+    name: str
+
+
+class UpdatePlaylistRequest(BaseModel):
+    name: str

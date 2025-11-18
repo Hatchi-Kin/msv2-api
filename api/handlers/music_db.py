@@ -1,8 +1,20 @@
 from fastapi import HTTPException
 
 from api.repositories.music_db import MusicRepository
-from api.models.music_db import ArtistList, AlbumList, SimilarTrack, SimilarTrackList
+from api.models.music_db import (
+    ArtistList,
+    AlbumList,
+    SimilarTrack,
+    SimilarTrackList,
+    FavoritesList,
+    PlaylistsList,
+    PlaylistSummary,
+    PlaylistDetail,
+)
 from api.core.logger import logger
+
+
+# ----------------------------------------------- #
 
 
 async def get_track_count_handler(music_repo: MusicRepository) -> int:
@@ -61,6 +73,82 @@ async def get_tracklist_from_artist_and_album_handler(
     if not tracklist.tracks:
         raise HTTPException(status_code=404, detail="No tracks found for the given artist and album.")
     return tracklist
+
+
+# ----------------------------------------------- #
+
+
+async def add_favorite_handler(user_id: int, track_id: int, music_repo: MusicRepository):
+    result = await music_repo.add_favorite(user_id, track_id)
+    return {
+        "status": "success",
+        "message": "Track added to favorites" if result["added"] else "Track already in favorites",
+    }
+
+
+async def remove_favorite_handler(user_id: int, track_id: int, music_repo: MusicRepository):
+    await music_repo.remove_favorite(user_id, track_id)
+    return {"status": "success", "message": "Track removed from favorites"}
+
+
+async def get_favorites_handler(user_id: int, music_repo: MusicRepository) -> FavoritesList:
+    result = await music_repo.get_user_favorites(user_id)
+    return FavoritesList(tracks=result["tracks"], total=result["total"])
+
+
+async def check_favorite_handler(user_id: int, track_id: int, music_repo: MusicRepository):
+    is_favorite = await music_repo.check_is_favorite(user_id, track_id)
+    return {"is_favorite": is_favorite}
+
+
+async def create_playlist_handler(user_id: int, name: str, music_repo: MusicRepository) -> PlaylistSummary:
+    result = await music_repo.create_playlist(user_id, name)
+    return PlaylistSummary(**result)
+
+
+# ----------------------------------------------- #
+
+
+async def get_playlists_handler(user_id: int, music_repo: MusicRepository) -> PlaylistsList:
+    playlists = await music_repo.get_user_playlists(user_id)
+    return PlaylistsList(playlists=[PlaylistSummary(**p) for p in playlists])
+
+
+async def get_playlist_detail_handler(
+    user_id: int, playlist_id: int, music_repo: MusicRepository
+) -> PlaylistDetail:
+    result = await music_repo.get_playlist_detail(user_id, playlist_id)
+    return PlaylistDetail(**result)
+
+
+async def update_playlist_handler(user_id: int, playlist_id: int, new_name: str, music_repo: MusicRepository):
+    await music_repo.update_playlist_name(user_id, playlist_id, new_name)
+    return {"status": "success", "message": "Playlist name updated"}
+
+
+async def delete_playlist_handler(user_id: int, playlist_id: int, music_repo: MusicRepository):
+    await music_repo.delete_playlist(user_id, playlist_id)
+    return {"status": "success", "message": "Playlist deleted"}
+
+
+async def add_track_to_playlist_handler(
+    user_id: int, playlist_id: int, track_id: int, music_repo: MusicRepository
+):
+    result = await music_repo.add_track_to_playlist(user_id, playlist_id, track_id)
+    return {
+        "status": "success",
+        "message": "Track added to playlist" if result["added"] else "Track already in playlist",
+    }
+
+
+async def remove_track_from_playlist_handler(
+    user_id: int, playlist_id: int, track_id: int, music_repo: MusicRepository
+):
+    await music_repo.remove_track_from_playlist(user_id, playlist_id, track_id)
+    return {"status": "success", "message": "Track removed from playlist"}
+
+
+# ----------------------------------------------- #
 
 
 async def get_similar_tracks_handler(track_id: int, music_repo: MusicRepository) -> SimilarTrackList:
