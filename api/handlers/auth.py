@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
-from api.repositories.auth_repo import AuthRepository
+from api.repositories.auth import AuthRepository
 from api.core.config import settings
 from api.core.security import (
     verify_password,
@@ -33,9 +33,9 @@ async def register_user_handler(
 
 
 async def login_handler(
-    response: Response,
     form_data: OAuth2PasswordRequestForm,
     auth_repo: AuthRepository,
+    response: Response,
 ) -> Token:
     user = await auth_repo.get_user_by_email(form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -69,8 +69,8 @@ async def login_handler(
 
 async def refresh_token_handler(
     request: Request,
-    response: Response,
     auth_repo: AuthRepository,
+    response: Response,
 ) -> Token:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
@@ -116,9 +116,9 @@ async def refresh_token_handler(
 
 
 async def logout_handler(
-    response: Response,
     current_user: UserInDB,
     auth_repo: AuthRepository,
+    response: Response,
 ):
     await auth_repo.clear_user_jti(current_user.id)
     response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="lax")

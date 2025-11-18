@@ -10,10 +10,10 @@ from api.handlers.auth import (
     logout_handler,
 )
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register")
+@auth_router.post("/register")
 async def register_user_endpoint(
     user_create: UserCreate,
     auth_repo: AuthRepo,
@@ -21,33 +21,33 @@ async def register_user_endpoint(
     return await register_user_handler(user_create, auth_repo)
 
 
-@router.post("/login", response_model=Token)
+@auth_router.post("/login", response_model=Token)
 async def login_endpoint(
     auth_repo: AuthRepo,
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
-    return await login_handler(response, form_data, auth_repo)
+    return await login_handler(form_data, auth_repo, response)
 
 
-@router.post("/refresh", response_model=Token)
+@auth_router.post("/refresh", response_model=Token)
 async def refresh_token_endpoint(
     request: Request,
     response: Response,
     auth_repo: AuthRepo,
 ):
-    return await refresh_token_handler(request, response, auth_repo)
+    return await refresh_token_handler(request, auth_repo, response)
 
 
-@router.post("/logout")
+@auth_router.post("/logout")
 async def logout_endpoint(
-    auth_repo: AuthRepo,
     response: Response,
     current_user: CurrentUser,
+    auth_repo: AuthRepo,
 ):
-    return await logout_handler(response, current_user, auth_repo)
+    return await logout_handler(current_user, auth_repo, response)
 
 
-@router.get("/me", response_model=User)
-async def read_users_me(current_user: CurrentUser):
+@auth_router.get("/me", response_model=User)
+async def users_me_endpoint(current_user: CurrentUser):
     return current_user

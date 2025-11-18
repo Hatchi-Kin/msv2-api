@@ -1,7 +1,13 @@
-# For local development, you might port-forward the k3s postgres service:
+# For local development
+## you might port-forward the k3s postgres services:
 ```sh
 kubectl port-forward service/postgres-service 5432:5432 -n glasgow-prod
 ```
+and
+```sh
+kubectl port-forward -n glasgow-prod svc/minio-service 9000:9000
+```
+
 
 # Then start the app
 ```sh
