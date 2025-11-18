@@ -53,7 +53,7 @@ class MusicRepository:
                 offset,
             )
             return [row["artist_folder"] for row in rows if row["artist_folder"]]
-        
+
     async def get_artist_count(self) -> int:
         async with self.pool.acquire() as conn:
             result = await conn.fetchval(f"SELECT COUNT(DISTINCT artist_folder) FROM {self.table};")
