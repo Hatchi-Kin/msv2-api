@@ -93,6 +93,8 @@ class CORSSettings(BaseSettings):
         "http://localhost",
         "http://127.0.0.1",
         "http://msv2-webapp.192.168.1.20.nip.io",
+        "https://webapp.msv2.ovh",
+        "https://www.webapp.msv2.ovh"
     ]
 
 
