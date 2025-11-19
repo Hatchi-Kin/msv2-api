@@ -1,12 +1,13 @@
 from typing import Optional
+
 from minio import Minio
 from minio.error import S3Error
 
 from api.core.config import settings
 
 
-class StorageRepository:
-    """Repository for MinIO storage operations."""
+class ObjectsRepository:
+    """Repository for MinIO bucket storage operations."""
 
     def __init__(self, minio_client: Minio):
         self.client = minio_client
@@ -23,7 +24,9 @@ class StorageRepository:
         stat = self.client.stat_object(self.bucket, object_path)
         return stat.size
 
-    def get_object_stream(self, object_path: str, offset: Optional[int] = None, length: Optional[int] = None):
+    def get_object_stream(
+        self, object_path: str, offset: Optional[int] = None, length: Optional[int] = None
+    ):
         """
         Get an object stream from MinIO.
 

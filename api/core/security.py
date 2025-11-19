@@ -9,6 +9,7 @@ from api.core.config import settings
 from api.models.auth import TokenData, UserInDB
 from api.repositories.auth import AuthRepository
 
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -28,7 +29,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
     to_encode.update({"exp": int(expire.timestamp())})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -100,9 +103,9 @@ async def validate_token_and_get_user(token: str, auth_repo: AuthRepository) -> 
         raise credentials_exception
 
     # Check expiration (belt and suspenders - JWT library also checks this)
-    if payload.get("exp") and datetime.fromtimestamp(payload["exp"], tz=timezone.utc) < datetime.now(
-        timezone.utc
-    ):
+    if payload.get("exp") and datetime.fromtimestamp(
+        payload["exp"], tz=timezone.utc
+    ) < datetime.now(timezone.utc):
         raise credentials_exception
 
     return user

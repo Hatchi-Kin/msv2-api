@@ -1,35 +1,44 @@
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
-from fastapi import HTTPException, Response, Request
+from fastapi import Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
-from api.repositories.auth import AuthRepository
 from api.core.config import settings
+from api.core.exceptions import (
+    AlreadyExistsException,
+    InactiveUserException,
+    UnauthorizedException,
+)
+from api.core.logger import logger
 from api.core.security import (
-    verify_password,
-    get_password_hash,
     create_access_token,
     create_refresh_token,
     decode_jwt,
+    get_password_hash,
+    verify_password,
 )
-from api.models.auth import UserCreate, Token, UserInDB, RefreshTokenPayload
+from api.models.auth import RefreshTokenPayload, Token, UserCreate
+from api.models.responses import SuccessResponse
+from api.repositories.auth import AuthRepository
 
 
 async def register_user_handler(
     user_create: UserCreate,
     auth_repo: AuthRepository,
-):
+) -> SuccessResponse:
     existing_user = await auth_repo.get_user_by_email(user_create.email)
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise AlreadyExistsException("Email")
+
     hashed_password = get_password_hash(user_create.password)
-    _user_in_db = await auth_repo.create_user(
+    await auth_repo.create_user(
         email=user_create.email,
         username=user_create.username,
         hashed_password=hashed_password,
     )
-    return {"message": "User registered successfully"}
+    logger.info(f"New user registered: {user_create.email}")
+    return SuccessResponse(message="User registered successfully")
 
 
 async def login_handler(
@@ -39,9 +48,10 @@ async def login_handler(
 ) -> Token:
     user = await auth_repo.get_user_by_email(form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        logger.warning(f"Failed login attempt for: {form_data.username}")
+        raise UnauthorizedException("Incorrect email or password")
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise InactiveUserException()
 
     jti_uuid = str(uuid4())
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -53,7 +63,9 @@ async def login_handler(
         data={"sub": user.email, "jti": jti_uuid}, expires_delta=refresh_token_expires
     )
 
-    await auth_repo.update_user_jti(user.id, jti_uuid, datetime.now(timezone.utc) + refresh_token_expires)
+    await auth_repo.update_user_jti(
+        user.id, jti_uuid, datetime.now(timezone.utc) + refresh_token_expires
+    )
 
     response.set_cookie(
         key="refresh_token",
@@ -74,18 +86,25 @@ async def refresh_token_handler(
 ) -> Token:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
-        raise HTTPException(status_code=401, detail="Refresh token missing")
+        raise UnauthorizedException("Refresh token missing")
+
     payload = decode_jwt(refresh_token)
     if not payload:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        raise UnauthorizedException("Invalid refresh token")
+
     try:
         refresh_token_payload = RefreshTokenPayload(**payload)
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid refresh token payload")
+        raise UnauthorizedException("Invalid refresh token payload")
 
     user = await auth_repo.get_user_by_email(refresh_token_payload.sub)
-    if not user or user.jti != refresh_token_payload.jti or user.jti_expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+    if (
+        not user
+        or user.jti != refresh_token_payload.jti
+        or user.jti_expires_at < datetime.now(timezone.utc)
+    ):
+        logger.warning(f"Invalid refresh token attempt for: {refresh_token_payload.sub}")
+        raise UnauthorizedException("Invalid or expired refresh token")
 
     new_jti_uuid = str(uuid4())
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -116,10 +135,11 @@ async def refresh_token_handler(
 
 
 async def logout_handler(
-    current_user: UserInDB,
+    current_user: int,
     auth_repo: AuthRepository,
     response: Response,
-):
-    await auth_repo.clear_user_jti(current_user.id)
+) -> SuccessResponse:
+    await auth_repo.clear_user_jti(current_user)
     response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="lax")
-    return {"message": "Logged out successfully"}
+    logger.info(f"User logged out: {current_user}")
+    return SuccessResponse(message="Logged out successfully")

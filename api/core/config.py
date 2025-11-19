@@ -1,10 +1,19 @@
 from typing import Optional
 
-from pydantic import field_validator, ValidationInfo
+from pydantic import ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
+
+    # PostgreSQL settings
+    AUTH_TABLE: str = "users"
+    MUSIC_TABLE: str = "megaset"
+    FAVORITES_TABLE: str = "favorites"
+    PLAYLISTS_TABLE: str = "playlists"
+    PLAYLIST_TRACKS_TABLE: str = "playlist_tracks"
+    TRACK_VIZ_TABLE: str = "track_visualization"
+    EMBEDDINGS_COLUMN: str = "embedding_512_vector"
 
     # For Kubernetes environment
     POSTGRES_USER: Optional[str] = None
@@ -12,7 +21,6 @@ class DatabaseSettings(BaseSettings):
     POSTGRES_HOST: Optional[str] = None
     POSTGRES_PORT: Optional[int] = None
     POSTGRES_DB: Optional[str] = None
-    MUSIC_TABLE: str = "megaset"
 
     # For local .env file or explicit setting
     DATABASE_URL: Optional[str] = None
@@ -52,6 +60,32 @@ class AuthSettings(BaseSettings):
     ALGORITHM: str = "HS256"
 
 
+class BusinessRulesSettings(BaseSettings):
+    """Business logic configuration."""
+
+    MAX_FAVORITES_PER_USER: int = 20
+    MAX_PLAYLIST_TRACKS: int = 20
+
+    # Similarity search: Query more candidates (30) to allow filtering by artist diversity,
+    # then return top 9 tracks with max 1 per artist for varied recommendations
+    SIMILAR_TRACKS_LIMIT: int = 30
+    SIMILAR_TRACKS_RETURNED: int = 9
+
+    # API query limits (max values users can request)
+    MAX_ARTIST_LIMIT: int = 500
+    MAX_POINTS_LIMIT: int = 5000
+    MAX_SEARCH_LIMIT: int = 200
+    MAX_NEIGHBORS_LIMIT: int = 100
+
+    # Default values when not specified
+    DEFAULT_ARTIST_LIMIT: int = 100
+    DEFAULT_POINTS_LIMIT: int = 1000
+    DEFAULT_SEARCH_LIMIT: int = 50
+    DEFAULT_NEIGHBORS_LIMIT: int = 20
+
+    AUDIO_STREAM_CHUNK_SIZE: int = 32 * 1024  # 32KB
+
+
 class CORSSettings(BaseSettings):
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
@@ -65,7 +99,9 @@ class CORSSettings(BaseSettings):
 # ----------------------------------------------- #
 
 
-class Settings(DatabaseSettings, MinioSettings, AuthSettings, CORSSettings, BaseSettings):
+class Settings(
+    DatabaseSettings, MinioSettings, AuthSettings, CORSSettings, BusinessRulesSettings, BaseSettings
+):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=True)
 
 

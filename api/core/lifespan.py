@@ -10,13 +10,20 @@ from api.core.logger import logger
 
 
 async def startup_database_pool(app: FastAPI):
-    """Initialize database connection pool."""
-    pool = await asyncpg.create_pool(settings.DATABASE_URL, init=register_vector_codec)
+    """Initialize database connection pool with timeouts and limits."""
+    pool = await asyncpg.create_pool(
+        settings.DATABASE_URL,
+        init=register_vector_codec,
+        min_size=5,  # Minimum connections to maintain
+        max_size=20,  # Maximum connections allowed
+        command_timeout=30,  # Query timeout in seconds
+        timeout=5,  # Connection acquisition timeout in seconds
+    )
     if pool is None:
         raise Exception("Could not connect to the database")
 
     app.state.db_pool = pool
-    logger.info("Asyncpg Pool Connected (with vector codec)")
+    logger.info("Asyncpg Pool Connected (with vector codec, min=5, max=20)")
 
 
 def startup_minio_client(app: FastAPI):

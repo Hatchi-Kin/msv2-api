@@ -1,13 +1,12 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 
-# ----------------------------------------------- #
+class Track(BaseModel):
+    """Track metadata model."""
 
-
-class MegasetTrack(BaseModel):
     id: int
     filename: str
     filepath: str
@@ -36,11 +35,11 @@ class AlbumList(BaseModel):
 
 
 class TrackList(BaseModel):
-    tracks: List[MegasetTrack]
+    tracks: List[Track]
 
 
 class SimilarTrack(BaseModel):
-    track: MegasetTrack
+    track: Track
     similarity_score: float
 
 
@@ -48,11 +47,8 @@ class SimilarTrackList(BaseModel):
     tracks: List[SimilarTrack]
 
 
-# ----------------------------------------------- #
-
-
 class FavoritesList(BaseModel):
-    tracks: List[MegasetTrack]
+    tracks: List[Track]
     total: int
 
 
@@ -71,7 +67,7 @@ class PlaylistsList(BaseModel):
 class PlaylistDetail(BaseModel):
     id: int
     name: str
-    tracks: List[MegasetTrack]
+    tracks: List[Track]
     created_at: datetime
     updated_at: datetime
 

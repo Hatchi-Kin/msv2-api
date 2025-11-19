@@ -1,19 +1,20 @@
-from fastapi import APIRouter, Depends, Response, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.core.dependencies import AuthRepo, CurrentUser
-from api.models.auth import UserCreate, Token, User
 from api.handlers.auth import (
-    register_user_handler,
     login_handler,
-    refresh_token_handler,
     logout_handler,
+    refresh_token_handler,
+    register_user_handler,
 )
+from api.models.auth import Token, User, UserCreate
+from api.models.responses import SuccessResponse
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@auth_router.post("/register")
+@auth_router.post("/register", response_model=SuccessResponse)
 async def register_user_endpoint(
     user_create: UserCreate,
     auth_repo: AuthRepo,
@@ -39,13 +40,13 @@ async def refresh_token_endpoint(
     return await refresh_token_handler(request, auth_repo, response)
 
 
-@auth_router.post("/logout")
+@auth_router.post("/logout", response_model=SuccessResponse)
 async def logout_endpoint(
     response: Response,
     current_user: CurrentUser,
     auth_repo: AuthRepo,
 ):
-    return await logout_handler(current_user, auth_repo, response)
+    return await logout_handler(current_user.id, auth_repo, response)
 
 
 @auth_router.get("/me", response_model=User)
