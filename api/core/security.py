@@ -94,10 +94,26 @@ async def validate_token_and_get_user(token: str, auth_repo: AuthRepository) -> 
     if user is None:
         raise credentials_exception
 
-    ## Cannot use for 15 minutes token because several refreshes can come together
-    ## and create race condition, keep for 7 days token though.
+    # -------------------------------------------------------------------------
+    # JTI VALIDATION DISABLED FOR ACCESS TOKENS (RACE CONDITION FIX)
+    # -------------------------------------------------------------------------
+    # We disable strict JTI checks for Access Tokens to handle parallel requests.
+    #
+    # 1. Frontend makes parallel requests (e.g. Dashboard + Stats).
+    # 2. Both fail with 401 (Expired).
+    # 3. Both trigger a Token Refresh simultaneously.
+    # 4. Refresh A succeeds -> Rotates User.JTI to "A".
+    # 5. Refresh B succeeds -> Rotates User.JTI to "B".
+    # 6. Request A retries with Token "A".
+    # 7. API rejects Token "A" because DB now has JTI "B". -> User Logged Out.
+    #
+    # By disabling this check for short-lived Access Tokens (15m), we allow
+    # "slightly stale" tokens to work until they expire naturally.
+    #
+    # Strict JTI validation IS STILL ENFORCED for Refresh Tokens in
+    # `refresh_token_handler` to prevent token theft/replay.
+    # -------------------------------------------------------------------------
     
-    ## Check JTI for token revocation
     # token_jti = payload.get("jti")
     # if user.jti is None and token_jti is not None:
     #     raise credentials_exception
