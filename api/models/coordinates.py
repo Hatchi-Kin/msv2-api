@@ -2,6 +2,11 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
+from enum import Enum
+
+class VisualizationType(str, Enum):
+    DEFAULT = "default"
+    UMAP = "umap"
 
 class Point(BaseModel):
     """Single point in 3D coordinate space with track metadata."""

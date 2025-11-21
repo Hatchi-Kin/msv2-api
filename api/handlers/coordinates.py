@@ -7,16 +7,20 @@ from api.models.coordinates import (
     Point,
     PointsResponse,
     TrackNeighbors,
+    VisualizationType,
 )
 from api.repositories.coordinates import CoordinatesRepository
 
 
 async def get_all_points_handler(
-    coords_repo: CoordinatesRepository, limit: int, offset: int
+    coords_repo: CoordinatesRepository,
+    limit: int,
+    offset: int,
+    viz_type: VisualizationType = VisualizationType.DEFAULT,
 ) -> PointsResponse:
     """Get paginated coordinate points."""
-    points_data = await coords_repo.get_all_points(limit, offset)
-    total = await coords_repo.count_points()
+    points_data = await coords_repo.get_all_points(limit, offset, viz_type)
+    total = await coords_repo.count_points(viz_type)
     points = [Point(**point) for point in points_data]
 
     return PointsResponse(
@@ -27,9 +31,12 @@ async def get_all_points_handler(
     )
 
 
-async def get_statistics_handler(coords_repo: CoordinatesRepository) -> CoordinatesStats:
+async def get_statistics_handler(
+    coords_repo: CoordinatesRepository,
+    viz_type: VisualizationType = VisualizationType.DEFAULT,
+) -> CoordinatesStats:
     """Get coordinate space statistics."""
-    stats = await coords_repo.get_statistics()
+    stats = await coords_repo.get_statistics(viz_type)
 
     # Calculate percentages for genre distribution
     total = stats["total_tracks"]
@@ -54,19 +61,26 @@ async def get_statistics_handler(coords_repo: CoordinatesRepository) -> Coordina
 
 
 async def search_tracks_handler(
-    coords_repo: CoordinatesRepository, query: str, limit: int
+    coords_repo: CoordinatesRepository,
+    query: str,
+    limit: int,
+    viz_type: VisualizationType = VisualizationType.DEFAULT,
 ) -> list[Point]:
     """Search tracks in coordinate space."""
     if not query or len(query.strip()) < 2:
         raise APIException("Search query must be at least 2 characters")
 
-    results = await coords_repo.search_tracks(query, limit)
+    results = await coords_repo.search_tracks(query, limit, viz_type)
     return [Point(**point) for point in results]
 
 
-async def get_cluster_handler(coords_repo: CoordinatesRepository, cluster_id: int) -> ClusterInfo:
+async def get_cluster_handler(
+    coords_repo: CoordinatesRepository,
+    cluster_id: int,
+    viz_type: VisualizationType = VisualizationType.DEFAULT,
+) -> ClusterInfo:
     """Get all tracks in a specific cluster."""
-    cluster_data = await coords_repo.get_cluster_tracks(cluster_id)
+    cluster_data = await coords_repo.get_cluster_tracks(cluster_id, viz_type)
     if not cluster_data:
         raise NotFoundException("Cluster", str(cluster_id))
 
@@ -81,10 +95,13 @@ async def get_cluster_handler(coords_repo: CoordinatesRepository, cluster_id: in
 
 
 async def get_track_neighbors_handler(
-    coords_repo: CoordinatesRepository, track_id: int, limit: int
+    coords_repo: CoordinatesRepository,
+    track_id: int,
+    limit: int,
+    viz_type: VisualizationType = VisualizationType.DEFAULT,
 ) -> TrackNeighbors:
     """Get nearest neighbors of a track in 3D space."""
-    neighbors_data = await coords_repo.get_track_neighbors(track_id, limit)
+    neighbors_data = await coords_repo.get_track_neighbors(track_id, limit, viz_type)
     if neighbors_data is None:
         raise NotFoundException("Track in coordinate space", str(track_id))
 

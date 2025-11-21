@@ -13,6 +13,7 @@ class DatabaseSettings(BaseSettings):
     PLAYLISTS_TABLE: str = "playlists"
     PLAYLIST_TRACKS_TABLE: str = "playlist_tracks"
     TRACK_VIZ_TABLE: str = "track_visualization"
+    TRACK_VIZ_TABLE_2: str = "track_visualization_umap"
     EMBEDDINGS_COLUMN: str = "embedding_512_vector"
 
     # For Kubernetes environment
