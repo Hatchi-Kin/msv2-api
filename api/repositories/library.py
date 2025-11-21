@@ -4,12 +4,12 @@ import asyncpg
 
 from api.core.config import settings
 from api.core.logger import logger
-from api.models.metadata import Track, TrackList
+from api.models.library import Track, TrackList
 from api.repositories.database import DatabaseClient, validate_table_name
 
 
-class MetadataRepository:
-    """Repository for music metadata operations."""
+class LibraryRepository:
+    """Repository for lirary / megaset db operations."""
 
     def __init__(self, pool: asyncpg.Pool):
         self.db = DatabaseClient(pool)

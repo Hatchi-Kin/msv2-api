@@ -1,6 +1,6 @@
 from api.core.config import settings
 from api.core.exceptions import MaxLimitException, NotFoundException
-from api.models.metadata import FavoritesList
+from api.models.library import FavoritesList
 from api.models.responses import OperationResult
 from api.repositories.favorites import FavoritesRepository
 

@@ -1,6 +1,6 @@
 from api.core.config import settings
 from api.core.exceptions import MaxLimitException, NotFoundException
-from api.models.metadata import PlaylistDetail, PlaylistsList, PlaylistSummary
+from api.models.library import PlaylistDetail, PlaylistsList, PlaylistSummary
 from api.models.responses import OperationResult
 from api.repositories.playlists import PlaylistsRepository
 

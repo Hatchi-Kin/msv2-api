@@ -10,7 +10,7 @@ from api.handlers.playlists import (
     remove_track_from_playlist_handler,
     update_playlist_handler,
 )
-from api.models.metadata import (
+from api.models.library import (
     CreatePlaylistRequest,
     PlaylistDetail,
     PlaylistsList,
@@ -19,7 +19,7 @@ from api.models.metadata import (
 )
 from api.models.responses import OperationResult
 
-playlists_router = APIRouter(prefix="/music", tags=["User's Playlists"])
+playlists_router = APIRouter(prefix="/user", tags=["User's Playlists"])
 
 
 @playlists_router.post("/playlists", response_model=PlaylistSummary)

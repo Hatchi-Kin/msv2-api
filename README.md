@@ -8,6 +8,11 @@ and
 kubectl port-forward -n glasgow-prod svc/minio-service 9000:9000
 ```
 
+# or maybe just port forward the prod api directly
+```sh
+kubectl port-forward -n glasgow-prod svc/fastapi-msv2-api-service 8000:8010
+```
+
 
 # Then start the app
 ```sh

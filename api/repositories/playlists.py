@@ -4,7 +4,7 @@ import asyncpg
 
 from api.core.config import settings
 from api.core.logger import logger
-from api.models.metadata import Track
+from api.models.library import Track
 from api.repositories.database import DatabaseClient, validate_table_name
 
 
@@ -123,30 +123,37 @@ class PlaylistsRepository:
 
     async def add_track_to_playlist(self, user_id: int, playlist_id: int, track_id: int) -> bool:
         """Add track to playlist. Returns True if added, False if already exists."""
-        # Get next position
-        next_pos_query = f"""
-            SELECT COALESCE(MAX(position), 0) + 1 
-            FROM {self.playlist_tracks_table} 
-            WHERE playlist_id = $1;
-        """
-        next_pos = await self.db.fetchval(next_pos_query, playlist_id)
 
-        # Add track
-        add_query = f"""
-            INSERT INTO {self.playlist_tracks_table} (playlist_id, track_id, position) 
-            VALUES ($1, $2, $3) 
-            ON CONFLICT DO NOTHING 
-            RETURNING id;
-        """
-        result = await self.db.fetchval(add_query, playlist_id, track_id, next_pos)
+        # We access the pool directly to ensure all steps happen in ONE transaction.
+        # If step 3 fails, step 2 is rolled back automatically.
+        async with self.db.pool.acquire() as conn:
+            async with conn.transaction():
+                # 1. Get next position
+                next_pos_query = f"""
+                        SELECT COALESCE(MAX(position), 0) + 1 
+                        FROM {self.playlist_tracks_table} 
+                        WHERE playlist_id = $1;
+                    """
+                next_pos = await conn.fetchval(next_pos_query, playlist_id)
 
-        # Update playlist timestamp
-        if result:
-            update_query = f"UPDATE {self.playlists_table} SET updated_at = NOW() WHERE id = $1;"
-            await self.db.execute(update_query, playlist_id)
-            logger.info(f"Added track {track_id} to playlist {playlist_id}")
+                # 2. Add track
+                add_query = f"""
+                        INSERT INTO {self.playlist_tracks_table} (playlist_id, track_id, position) 
+                        VALUES ($1, $2, $3) 
+                        ON CONFLICT DO NOTHING 
+                        RETURNING id;
+                    """
+                result = await conn.fetchval(add_query, playlist_id, track_id, next_pos)
 
-        return result is not None
+                # 3. Update playlist timestamp (Only if insert succeeded)
+                if result:
+                    update_query = (
+                        f"UPDATE {self.playlists_table} SET updated_at = NOW() WHERE id = $1;"
+                    )
+                    await conn.execute(update_query, playlist_id)
+                    logger.info(f"Added track {track_id} to playlist {playlist_id}")
+
+                return result is not None
 
     async def remove_track_from_playlist(
         self, user_id: int, playlist_id: int, track_id: int

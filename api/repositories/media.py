@@ -6,8 +6,8 @@ from minio.error import S3Error
 from api.core.config import settings
 
 
-class ObjectsRepository:
-    """Repository for MinIO bucket storage operations."""
+class MediaRepository:
+    """Repository for object storage / bucket operations."""
 
     def __init__(self, minio_client: Minio):
         self.client = minio_client

@@ -9,7 +9,6 @@ from api.core.config import settings
 from api.models.auth import TokenData, UserInDB
 from api.repositories.auth import AuthRepository
 
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

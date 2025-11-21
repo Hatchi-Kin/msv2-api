@@ -5,18 +5,18 @@ from minio.error import S3Error
 from api.core.config import settings
 from api.core.exceptions import APIException, NotFoundException
 from api.core.logger import logger
-from api.repositories.metadata import MetadataRepository
-from api.repositories.objects import ObjectsRepository
+from api.repositories.library import LibraryRepository
+from api.repositories.media import MediaRepository
 
 
 async def stream_audio_handler(
     track_id: int,
     request: Request,
-    metadata_repo: MetadataRepository,
-    objects_repo: ObjectsRepository,
+    library_repo: LibraryRepository,
+    media_repo: MediaRepository,
 ):
     # Get track from database
-    track = await metadata_repo.get_track_by_id(track_id, include_embeddings=False)
+    track = await library_repo.get_track_by_id(track_id, include_embeddings=False)
     if not track:
         raise NotFoundException("Track", str(track_id))
 
@@ -24,8 +24,8 @@ async def stream_audio_handler(
         raise APIException("Track has no file path")
 
     try:
-        # Get file size
-        file_size = objects_repo.get_object_size_in_bytes(track.relative_path)
+        # Get file size from bucket
+        file_size = media_repo.get_object_size_in_bytes(track.relative_path)
 
         # Check for Range header (for seeking/partial content)
         range_header = request.headers.get("range")
@@ -39,7 +39,7 @@ async def stream_audio_handler(
             content_length = end - start + 1
 
             # Get partial object
-            response = objects_repo.get_object_stream(
+            response = media_repo.get_object_stream(
                 track.relative_path, offset=start, length=content_length
             )
 
@@ -57,7 +57,7 @@ async def stream_audio_handler(
             )
         else:
             # Full file request
-            response = objects_repo.get_object_stream(track.relative_path)
+            response = media_repo.get_object_stream(track.relative_path)
 
             logger.debug(f"Streaming full track {track_id}")
             return StreamingResponse(

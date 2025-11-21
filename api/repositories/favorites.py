@@ -2,7 +2,7 @@ import asyncpg
 
 from api.core.config import settings
 from api.core.logger import logger
-from api.models.metadata import Track
+from api.models.library import Track
 from api.repositories.database import DatabaseClient, validate_table_name
 
 

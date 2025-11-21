@@ -5,11 +5,7 @@ from fastapi import Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.core.config import settings
-from api.core.exceptions import (
-    AlreadyExistsException,
-    InactiveUserException,
-    UnauthorizedException,
-)
+from api.core.exceptions import AlreadyExistsException, InactiveUserException, UnauthorizedException
 from api.core.logger import logger
 from api.core.security import (
     create_access_token,

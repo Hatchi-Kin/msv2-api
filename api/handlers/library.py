@@ -1,7 +1,7 @@
 from api.core.config import settings
 from api.core.exceptions import NotFoundException
 from api.core.logger import logger
-from api.models.metadata import (
+from api.models.library import (
     AlbumList,
     ArtistList,
     SimilarTrack,
@@ -9,54 +9,54 @@ from api.models.metadata import (
     Track,
     TrackList,
 )
-from api.repositories.metadata import MetadataRepository
+from api.repositories.library import LibraryRepository
 
 
-async def get_track_count_handler(metadata_repo: MetadataRepository) -> int:
-    return await metadata_repo.count_tracks()
+async def get_track_count_handler(library_repo: LibraryRepository) -> int:
+    return await library_repo.count_tracks()
 
 
 async def get_random_track_handler(
-    metadata_repo: MetadataRepository, include_embeddings: bool = False
+    library_repo: LibraryRepository, include_embeddings: bool = False
 ) -> Track:
-    track = await metadata_repo.get_random_track(include_embeddings)
+    track = await library_repo.get_random_track(include_embeddings)
     if not track:
         raise NotFoundException("Track")
     return track
 
 
 async def get_track_by_id_handler(
-    track_id: int, metadata_repo: MetadataRepository, include_embeddings: bool = False
+    track_id: int, library_repo: LibraryRepository, include_embeddings: bool = False
 ) -> Track:
-    track = await metadata_repo.get_track_by_id(track_id, include_embeddings)
+    track = await library_repo.get_track_by_id(track_id, include_embeddings)
     if not track:
         raise NotFoundException("Track", str(track_id))
     return track
 
 
 async def get_artist_list_handler(
-    metadata_repo: MetadataRepository, limit: int, offset: int
+    library_repo: LibraryRepository, limit: int, offset: int
 ) -> ArtistList:
-    artists = await metadata_repo.get_artist_list(limit, offset)
-    total = await metadata_repo.get_artist_count()
+    artists = await library_repo.get_artist_list(limit, offset)
+    total = await library_repo.get_artist_count()
     if not artists:
         raise NotFoundException("Artists")
     return ArtistList(artists=artists, total=total)
 
 
 async def get_album_list_from_artist_handler(
-    artist_name: str, metadata_repo: MetadataRepository
+    artist_name: str, library_repo: LibraryRepository
 ) -> AlbumList:
-    albums = await metadata_repo.get_album_list_from_artist(artist_name)
+    albums = await library_repo.get_album_list_from_artist(artist_name)
     if not albums:
         raise NotFoundException("Albums", artist_name)
     return AlbumList(albums=albums)
 
 
 async def get_tracklist_from_album_handler(
-    album_name: str, metadata_repo: MetadataRepository, include_embeddings: bool = False
+    album_name: str, library_repo: LibraryRepository, include_embeddings: bool = False
 ) -> TrackList:
-    tracks = await metadata_repo.get_tracklist_from_album(album_name, include_embeddings)
+    tracks = await library_repo.get_tracklist_from_album(album_name, include_embeddings)
     if not tracks.tracks:
         raise NotFoundException("Tracks", album_name)
     return tracks
@@ -65,10 +65,10 @@ async def get_tracklist_from_album_handler(
 async def get_tracklist_from_artist_and_album_handler(
     artist_name: str,
     album_name: str,
-    metadata_repo: MetadataRepository,
+    library_repo: LibraryRepository,
     include_embeddings: bool = False,
 ) -> TrackList:
-    tracklist = await metadata_repo.get_tracklist_from_artist_and_album(
+    tracklist = await library_repo.get_tracklist_from_artist_and_album(
         artist_name, album_name, include_embeddings
     )
     if not tracklist.tracks:
@@ -77,16 +77,16 @@ async def get_tracklist_from_artist_and_album_handler(
 
 
 async def get_similar_tracks_handler(
-    track_id: int, metadata_repo: MetadataRepository
+    track_id: int, library_repo: LibraryRepository
 ) -> SimilarTrackList:
     # Get the original track to exclude its artist from recommendations
-    original_track = await metadata_repo.get_track_by_id(track_id, include_embeddings=False)
+    original_track = await library_repo.get_track_by_id(track_id, include_embeddings=False)
     if not original_track:
         logger.warning(f"Similarity search requested for non-existent track: {track_id}")
         raise NotFoundException("Track", str(track_id))
 
     # Query for candidates to allow for artist diversity filtering
-    similar_tracks = await metadata_repo.get_similar_tracks(
+    similar_tracks = await library_repo.get_similar_tracks(
         track_id, limit=settings.SIMILAR_TRACKS_LIMIT
     )
 

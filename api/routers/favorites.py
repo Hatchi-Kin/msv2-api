@@ -8,10 +8,10 @@ from api.handlers.favorites import (
     remove_favorite_handler,
 )
 from api.models.favorites import FavoriteCheckResponse
-from api.models.metadata import FavoritesList
+from api.models.library import FavoritesList
 from api.models.responses import OperationResult
 
-favorites_router = APIRouter(prefix="/music", tags=["User's Favorites"])
+favorites_router = APIRouter(prefix="/user", tags=["User's Favorites"])
 
 
 @favorites_router.post("/favorites/{track_id}", response_model=OperationResult)

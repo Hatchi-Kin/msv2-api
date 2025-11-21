@@ -24,6 +24,7 @@ class DatabaseSettings(BaseSettings):
 
     # For local .env file or explicit setting
     DATABASE_URL: Optional[str] = None
+    ENABLE_DOCS: bool = False
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -94,7 +95,7 @@ class CORSSettings(BaseSettings):
         "http://127.0.0.1",
         "http://msv2-webapp.192.168.1.20.nip.io",
         "https://webapp.msv2.ovh",
-        "https://www.webapp.msv2.ovh"
+        "https://www.webapp.msv2.ovh",
     ]
 
 

@@ -1,12 +1,6 @@
 from fastapi import APIRouter
 
-from api.core.dependencies import (
-    CoordinatesRepo,
-    CurrentUser,
-    Neighbors,
-    PointsPagination,
-    Search,
-)
+from api.core.dependencies import CoordinatesRepo, CurrentUser, Neighbors, PointsPagination, Search
 from api.handlers.coordinates import (
     get_all_points_handler,
     get_cluster_handler,
@@ -22,7 +16,7 @@ from api.models.coordinates import (
     TrackNeighbors,
 )
 
-coordinates_router = APIRouter(prefix="/coordinates", tags=["3D Coordinates"])
+coordinates_router = APIRouter(prefix="/library/coordinates", tags=["3D Coordinates"])
 
 
 @coordinates_router.get("/points", response_model=PointsResponse)

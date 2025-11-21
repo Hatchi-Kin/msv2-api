@@ -16,10 +16,9 @@ from api.models.requests import (
 from api.repositories.auth import AuthRepository
 from api.repositories.coordinates import CoordinatesRepository
 from api.repositories.favorites import FavoritesRepository
-from api.repositories.metadata import MetadataRepository
-from api.repositories.objects import ObjectsRepository
+from api.repositories.library import LibraryRepository
+from api.repositories.media import MediaRepository
 from api.repositories.playlists import PlaylistsRepository
-
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -30,38 +29,31 @@ def get_db_pool(request: Request) -> asyncpg.Pool:
 
 
 def get_minio_client(request: Request) -> Minio:
-    """Get MinIO client from application state."""
     return request.app.state.minio_client
 
 
 def get_auth_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> AuthRepository:
-    """Get AuthRepository instance."""
     return AuthRepository(pool)
 
 
-def get_metadata_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> MetadataRepository:
-    """Get MetadataRepository instance."""
-    return MetadataRepository(pool)
+def get_library_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> LibraryRepository:
+    return LibraryRepository(pool)
 
 
 def get_favorites_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> FavoritesRepository:
-    """Get FavoritesRepository instance."""
     return FavoritesRepository(pool)
 
 
 def get_playlists_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> PlaylistsRepository:
-    """Get PlaylistsRepository instance."""
     return PlaylistsRepository(pool)
 
 
 def get_coordinates_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> CoordinatesRepository:
-    """Get CoordinatesRepository instance."""
     return CoordinatesRepository(pool)
 
 
-def get_objects_repository(minio_client: Minio = Depends(get_minio_client)) -> ObjectsRepository:
-    """Get ObjectsRepository instance."""
-    return ObjectsRepository(minio_client)
+def get_media_repository(minio_client: Minio = Depends(get_minio_client)) -> MediaRepository:
+    return MediaRepository(minio_client)
 
 
 async def get_current_user(
@@ -72,15 +64,15 @@ async def get_current_user(
     return await validate_token_and_get_user(token, auth_repo)
 
 
-# Type aliases for cleaner injection
+## Type aliases for cleaner injection
 
 # Repositories
 AuthRepo = Annotated[AuthRepository, Depends(get_auth_repository)]
-MetadataRepo = Annotated[MetadataRepository, Depends(get_metadata_repository)]
+LibraryRepo = Annotated[LibraryRepository, Depends(get_library_repository)]
 FavoritesRepo = Annotated[FavoritesRepository, Depends(get_favorites_repository)]
 PlaylistsRepo = Annotated[PlaylistsRepository, Depends(get_playlists_repository)]
 CoordinatesRepo = Annotated[CoordinatesRepository, Depends(get_coordinates_repository)]
-ObjectsRepo = Annotated[ObjectsRepository, Depends(get_objects_repository)]
+MediaRepo = Annotated[MediaRepository, Depends(get_media_repository)]
 
 # Clients
 MinioClient = Annotated[Minio, Depends(get_minio_client)]
