@@ -68,7 +68,7 @@ async def login_handler(
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         expires=int(refresh_token_expires.total_seconds()),
         max_age=int(refresh_token_expires.total_seconds()),
     )
@@ -123,7 +123,7 @@ async def refresh_token_handler(
         value=new_refresh_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         expires=int(new_refresh_token_expires.total_seconds()),
         max_age=int(new_refresh_token_expires.total_seconds()),
     )
@@ -136,6 +136,6 @@ async def logout_handler(
     response: Response,
 ) -> SuccessResponse:
     await auth_repo.clear_user_jti(current_user)
-    response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="lax")
+    response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="none")
     logger.info(f"User logged out: {current_user}")
     return SuccessResponse(message="Logged out successfully")
