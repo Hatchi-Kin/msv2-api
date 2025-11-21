@@ -67,10 +67,10 @@ class BusinessRulesSettings(BaseSettings):
     MAX_FAVORITES_PER_USER: int = 20
     MAX_PLAYLIST_TRACKS: int = 20
 
-    # Similarity search: Query more candidates (30) to allow filtering by artist diversity,
-    # then return top 9 tracks with max 1 per artist for varied recommendations
-    SIMILAR_TRACKS_LIMIT: int = 30
-    SIMILAR_TRACKS_RETURNED: int = 9
+    # Similarity search: Query more candidates (40) to allow filtering by artist diversity,
+    # then return top 10 tracks with max 1 per artist for varied recommendations
+    SIMILAR_TRACKS_LIMIT: int = 40
+    SIMILAR_TRACKS_RETURNED: int = 10
 
     # API query limits (max values users can request)
     MAX_ARTIST_LIMIT: int = 500
