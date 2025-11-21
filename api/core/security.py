@@ -94,12 +94,15 @@ async def validate_token_and_get_user(token: str, auth_repo: AuthRepository) -> 
     if user is None:
         raise credentials_exception
 
-    # Check JTI for token revocation
-    token_jti = payload.get("jti")
-    if user.jti is None and token_jti is not None:
-        raise credentials_exception
-    if user.jti is not None and token_jti != user.jti:
-        raise credentials_exception
+    ## Cannot use for 15 minutes token because several refreshes can come together
+    ## and create race condition, keep for 7 days token though.
+    
+    ## Check JTI for token revocation
+    # token_jti = payload.get("jti")
+    # if user.jti is None and token_jti is not None:
+    #     raise credentials_exception
+    # if user.jti is not None and token_jti != user.jti:
+    #     raise credentials_exception
 
     # Check expiration (belt and suspenders - JWT library also checks this)
     if payload.get("exp") and datetime.fromtimestamp(
