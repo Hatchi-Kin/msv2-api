@@ -25,7 +25,9 @@ async def get_coordinate_points(
     _user: CurrentUser,
     coords_repo: CoordinatesRepo,
     params: PointsPagination,
-    viz_type: VisualizationType = Query(VisualizationType.DEFAULT, description="Visualization source table"),
+    viz_type: VisualizationType = Query(
+        VisualizationType.DEFAULT, description="Visualization source table"
+    ),
 ):
     """Get all coordinate points with track metadata."""
     return await get_all_points_handler(coords_repo, params.limit, params.offset, viz_type)
@@ -35,7 +37,9 @@ async def get_coordinate_points(
 async def get_coordinate_stats(
     _user: CurrentUser,
     coords_repo: CoordinatesRepo,
-    viz_type: VisualizationType = Query(VisualizationType.DEFAULT, description="Visualization source table"),
+    viz_type: VisualizationType = Query(
+        VisualizationType.DEFAULT, description="Visualization source table"
+    ),
 ):
     """Get overall coordinate space statistics."""
     return await get_statistics_handler(coords_repo, viz_type)
@@ -46,7 +50,9 @@ async def search_coordinate_tracks(
     _user: CurrentUser,
     coords_repo: CoordinatesRepo,
     params: Search,
-    viz_type: VisualizationType = Query(VisualizationType.DEFAULT, description="Visualization source table"),
+    viz_type: VisualizationType = Query(
+        VisualizationType.DEFAULT, description="Visualization source table"
+    ),
 ):
     """Search tracks by title, artist, album, or genre."""
     return await search_tracks_handler(coords_repo, params.q, params.limit, viz_type)
@@ -57,7 +63,9 @@ async def get_cluster_details(
     _user: CurrentUser,
     cluster_id: int,
     coords_repo: CoordinatesRepo,
-    viz_type: VisualizationType = Query(VisualizationType.DEFAULT, description="Visualization source table"),
+    viz_type: VisualizationType = Query(
+        VisualizationType.DEFAULT, description="Visualization source table"
+    ),
 ):
     """Get all tracks in a specific cluster."""
     return await get_cluster_handler(coords_repo, cluster_id, viz_type)
@@ -69,7 +77,9 @@ async def get_track_neighbors(
     track_id: int,
     coords_repo: CoordinatesRepo,
     params: Neighbors,
-    viz_type: VisualizationType = Query(VisualizationType.DEFAULT, description="Visualization source table"),
+    viz_type: VisualizationType = Query(
+        VisualizationType.DEFAULT, description="Visualization source table"
+    ),
 ):
     """Get nearest neighbors of a track in 3D space."""
     return await get_track_neighbors_handler(coords_repo, track_id, params.limit, viz_type)

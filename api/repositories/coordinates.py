@@ -17,12 +17,15 @@ class CoordinatesRepository:
         validate_table_name(settings.MUSIC_TABLE)
         self.viz_table = settings.TRACK_VIZ_TABLE
         self.viz_table_umap = settings.TRACK_VIZ_TABLE_2
+        self.viz_table_sphere = settings.TRACK_VIZ_TABLE_3
         self.music_table = settings.MUSIC_TABLE
 
     def _get_table(self, viz_type: VisualizationType) -> str:
         """Get the table name based on visualization type."""
         if viz_type == VisualizationType.UMAP:
             return self.viz_table_umap
+        if viz_type == VisualizationType.SPHERE:
+            return self.viz_table_sphere
         return self.viz_table
 
     async def get_all_points(
@@ -42,18 +45,14 @@ class CoordinatesRepository:
         rows = await self.db.fetch(query, limit, offset)
         return [dict(row) for row in rows]
 
-    async def count_points(
-        self, viz_type: VisualizationType = VisualizationType.DEFAULT
-    ) -> int:
+    async def count_points(self, viz_type: VisualizationType = VisualizationType.DEFAULT) -> int:
         """Get total count of visualization points."""
         table = self._get_table(viz_type)
         query = f"SELECT COUNT(*) FROM {table};"
         result = await self.db.fetchval(query)
         return result or 0
 
-    async def get_statistics(
-        self, viz_type: VisualizationType = VisualizationType.DEFAULT
-    ) -> Dict:
+    async def get_statistics(self, viz_type: VisualizationType = VisualizationType.DEFAULT) -> Dict:
         """Get overall visualization statistics."""
         table = self._get_table(viz_type)
         # Total tracks

@@ -4,9 +4,12 @@ from pydantic import BaseModel
 
 from enum import Enum
 
+
 class VisualizationType(str, Enum):
     DEFAULT = "default"
     UMAP = "umap"
+    SPHERE = "sphere"
+
 
 class Point(BaseModel):
     """Single point in 3D coordinate space with track metadata."""

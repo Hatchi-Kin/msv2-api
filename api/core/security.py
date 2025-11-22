@@ -113,7 +113,7 @@ async def validate_token_and_get_user(token: str, auth_repo: AuthRepository) -> 
     # Strict JTI validation IS STILL ENFORCED for Refresh Tokens in
     # `refresh_token_handler` to prevent token theft/replay.
     # -------------------------------------------------------------------------
-    
+
     # token_jti = payload.get("jti")
     # if user.jti is None and token_jti is not None:
     #     raise credentials_exception
