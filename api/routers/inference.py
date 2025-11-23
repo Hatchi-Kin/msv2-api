@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from api.core.dependencies import CurrentUser, InferenceRepo
-from api.handlers.inference import get_embeddings_handler
+from api.handlers.inference import get_embeddings_handler, get_test
 from api.models.inference import EmbeddingRequest, EmbeddingResponse
 
 inference_router = APIRouter(prefix="/inference", tags=["Inference"])
@@ -15,3 +15,12 @@ async def get_embeddings_endpoint(
 ) -> EmbeddingResponse:
     """Get embeddings for an audio file from inference service."""
     return await get_embeddings_handler(request.path, inference_repo)
+
+
+@inference_router.get("/test")
+async def test_inf_api(
+    inference_repo: InferenceRepo,
+):
+    return await get_test(inference_repo)
+
+    

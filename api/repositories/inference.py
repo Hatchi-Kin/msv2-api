@@ -11,7 +11,7 @@ class InferenceRepository:
     def __init__(self, timeout: int = 600):
         self.timeout = timeout
         self.base_url = settings.MSV2_INFERENCE_URL
-    
+
     @property
     def endpoint(self) -> str:
         """Get inference endpoint URL. Raises error if not configured."""
@@ -21,6 +21,10 @@ class InferenceRepository:
                 "Set MSV2_INFERENCE_URL in your .env file or environment variables."
             )
         return f"{self.base_url.rstrip('/')}/inference/embeddings"
+
+    @property
+    def test(self):
+        return f"{self.base_url.rstrip('/')}/test"
 
     async def get_embeddings(self, audio_minio_path: str) -> EmbeddingResponse:
         """
@@ -67,3 +71,12 @@ class InferenceRepository:
         except httpx.RequestError as e:
             logger.error(f"Failed to reach inference service: {e}")
             raise RuntimeError(f"Failed to reach inference service: {e}") from e
+
+
+    async def letstest(self):
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.test,
+                headers={"Content-Type": "application/json"},
+            )
+            return response

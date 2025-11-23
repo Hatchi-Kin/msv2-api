@@ -34,3 +34,9 @@ async def get_embeddings_handler(
             detail=f"Inference service unavailable: {str(e)}",
             status_code=503,
         )
+
+
+async def get_test(
+    inference_repo: InferenceRepository,  
+):
+    return InferenceRepository.letstest(inference_repo)
