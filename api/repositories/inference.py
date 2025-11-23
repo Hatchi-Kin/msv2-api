@@ -10,7 +10,17 @@ class InferenceRepository:
 
     def __init__(self, timeout: int = 30):
         self.timeout = timeout
-        self.endpoint = f"{settings.MSV2_INFERENCE_URL.rstrip('/')}/inference/embeddings"
+        self.base_url = settings.MSV2_INFERENCE_URL
+    
+    @property
+    def endpoint(self) -> str:
+        """Get inference endpoint URL. Raises error if not configured."""
+        if not self.base_url:
+            raise RuntimeError(
+                "MSV2_INFERENCE_URL is not configured. "
+                "Set MSV2_INFERENCE_URL in your .env file or environment variables."
+            )
+        return f"{self.base_url.rstrip('/')}/inference/embeddings"
 
     async def get_embeddings(self, audio_minio_path: str) -> EmbeddingResponse:
         """

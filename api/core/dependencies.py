@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from minio import Minio
 
+from api.core.config import settings
 from api.core.security import validate_token_and_get_user
 from api.models.auth import UserInDB
 from api.models.requests import (
@@ -59,7 +60,7 @@ def get_media_repository(minio_client: Minio = Depends(get_minio_client)) -> Med
 
 def get_inference_repository() -> InferenceRepository:
     """Get InferenceRepository instance."""
-    return InferenceRepository()
+    return InferenceRepository(timeout=settings.INFERENCE_TIMEOUT)
 
 
 async def get_current_user(

@@ -90,6 +90,10 @@ class BusinessRulesSettings(BaseSettings):
     DEFAULT_NEIGHBORS_LIMIT: int = 20
 
     AUDIO_STREAM_CHUNK_SIZE: int = 32 * 1024  # 32KB
+    
+    # Inference service timeout (in seconds)
+    # Cold start can take 60-120s, warm requests are usually < 5s
+    INFERENCE_TIMEOUT: int = 120
 
 
 class CORSSettings(BaseSettings):
