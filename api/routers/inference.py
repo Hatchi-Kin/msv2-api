@@ -10,7 +10,7 @@ inference_router = APIRouter(prefix="/inference", tags=["Inference"])
 @inference_router.post("/embeddings", response_model=EmbeddingResponse)
 async def get_embeddings_endpoint(
     request: EmbeddingRequest,
-    _user: CurrentUser,
+    # _user: CurrentUser,
     inference_repo: InferenceRepo,
 ) -> EmbeddingResponse:
     """Get embeddings for an audio file from inference service."""
