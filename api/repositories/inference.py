@@ -8,7 +8,7 @@ from api.models.inference import EmbeddingRequest, EmbeddingResponse
 class InferenceRepository:
     """Repository for inference service operations."""
 
-    def __init__(self, timeout: int = 30):
+    def __init__(self, timeout: int = 600):
         self.timeout = timeout
         self.base_url = settings.MSV2_INFERENCE_URL
     
