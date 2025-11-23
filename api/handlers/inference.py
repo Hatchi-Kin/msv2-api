@@ -39,4 +39,4 @@ async def get_embeddings_handler(
 async def get_test(
     inference_repo: InferenceRepository,  
 ):
-    return InferenceRepository.letstest(inference_repo)
+    return await InferenceRepository.letstest(inference_repo)
