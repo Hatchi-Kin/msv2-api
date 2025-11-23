@@ -24,6 +24,9 @@ class DatabaseSettings(BaseSettings):
     POSTGRES_PORT: Optional[int] = None
     POSTGRES_DB: Optional[str] = None
 
+    # msv2-inference api url
+    MSV2_INFERENCE_URL: Optional[str] = None
+
     # For local .env file or explicit setting
     DATABASE_URL: Optional[str] = None
     ENABLE_DOCS: bool = False

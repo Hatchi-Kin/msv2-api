@@ -7,6 +7,7 @@ from api.routers.auth import auth_router
 from api.routers.coordinates import coordinates_router
 from api.routers.favorites import favorites_router
 from api.routers.health import health_router
+from api.routers.inference import inference_router
 from api.routers.library import library_router
 from api.routers.media import media_router
 from api.routers.playlists import playlists_router
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(playlists_router)
     app.include_router(media_router)
     app.include_router(coordinates_router)
+    app.include_router(inference_router)
     app.include_router(health_router)
 
     return app

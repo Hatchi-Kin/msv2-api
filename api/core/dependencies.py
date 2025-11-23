@@ -16,6 +16,7 @@ from api.models.requests import (
 from api.repositories.auth import AuthRepository
 from api.repositories.coordinates import CoordinatesRepository
 from api.repositories.favorites import FavoritesRepository
+from api.repositories.inference import InferenceRepository
 from api.repositories.library import LibraryRepository
 from api.repositories.media import MediaRepository
 from api.repositories.playlists import PlaylistsRepository
@@ -56,6 +57,11 @@ def get_media_repository(minio_client: Minio = Depends(get_minio_client)) -> Med
     return MediaRepository(minio_client)
 
 
+def get_inference_repository() -> InferenceRepository:
+    """Get InferenceRepository instance."""
+    return InferenceRepository()
+
+
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     auth_repo: Annotated[AuthRepository, Depends(get_auth_repository)],
@@ -73,6 +79,7 @@ FavoritesRepo = Annotated[FavoritesRepository, Depends(get_favorites_repository)
 PlaylistsRepo = Annotated[PlaylistsRepository, Depends(get_playlists_repository)]
 CoordinatesRepo = Annotated[CoordinatesRepository, Depends(get_coordinates_repository)]
 MediaRepo = Annotated[MediaRepository, Depends(get_media_repository)]
+InferenceRepo = Annotated[InferenceRepository, Depends(get_inference_repository)]
 
 # Clients
 MinioClient = Annotated[Minio, Depends(get_minio_client)]
