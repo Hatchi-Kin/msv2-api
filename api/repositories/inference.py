@@ -74,9 +74,13 @@ class InferenceRepository:
 
 
     async def letstest(self):
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.get(
                 self.test,
                 headers={"Content-Type": "application/json"},
             )
-            return response
+            return {
+                "status_code": response.status_code,
+                "content": response.text,
+                "inference_url": self.test
+            }

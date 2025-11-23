@@ -8,5 +8,5 @@ class EmbeddingRequest(BaseModel):
 
 
 class EmbeddingResponse(BaseModel):
-    embeddings: List[float]
+    embedding: List[float]
     shape: List[int]
