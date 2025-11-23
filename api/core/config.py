@@ -92,8 +92,8 @@ class BusinessRulesSettings(BaseSettings):
     AUDIO_STREAM_CHUNK_SIZE: int = 32 * 1024  # 32KB
     
     # Inference service timeout (in seconds)
-    # Cold start can take 60-120s, warm requests are usually < 5s
-    INFERENCE_TIMEOUT: int = 120
+    # Cold start with model loading can take 3-5 minutes, warm requests are usually < 5s
+    INFERENCE_TIMEOUT: int = 360
 
 
 class CORSSettings(BaseSettings):

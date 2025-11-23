@@ -52,4 +52,7 @@ async def get_health_check_endpoint(
 
 @health_router.get("/favicon.ico")
 async def get_favicon_endpoint():
-    return FileResponse("favicon.ico")
+    """Return 204 No Content for favicon requests to avoid errors."""
+    from fastapi.responses import Response
+
+    return Response(status_code=204)
