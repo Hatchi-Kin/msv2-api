@@ -18,12 +18,14 @@ dependencies = [
     "uvicorn>=0.38.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
-    "black>=24.0.0",
-    "isort>=7.0.0",
+[dependency-groups]
+dev = [
+    "black>=25.11.0",
+    "ruff>=0.14.6",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ['py312']
+target-version = "py312"
+
+[tool.ruff.lint]

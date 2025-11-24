@@ -3,7 +3,6 @@ from fastapi import APIRouter
 from api.core.dependencies import CurrentUser, InferenceRepo
 from api.handlers.inference import get_embeddings_handler, get_test
 from api.models.inference import EmbeddingRequest, EmbeddingResponse
-from api.core.logger import logger
 
 inference_router = APIRouter(prefix="/inference", tags=["Inference"])
 
@@ -22,7 +21,6 @@ async def get_embeddings_endpoint(
 async def test_inf_api(
     inference_repo: InferenceRepo,
 ):
-    logger.info("COMON")
     return await get_test(inference_repo)
 
     
