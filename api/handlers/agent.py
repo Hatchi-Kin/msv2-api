@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from api.agents.gem_hunter.graph import build_agent_graph
 from api.agents.gem_hunter.state import UIState
 from api.agents.gem_hunter.exceptions import LLMFailureError
+from api.repositories.library import LibraryRepository
 from api.core.logger import logger
 
 # Global checkpointer for MVP (Single worker only)
@@ -58,7 +59,11 @@ async def start_recommendation_handler(
 
 
 async def resume_agent_handler(
-    action: str, playlist_id: int, payload: Dict[str, Any], pool: asyncpg.Pool
+    action: str,
+    playlist_id: int,
+    payload: Dict[str, Any],
+    pool: asyncpg.Pool,
+    library_repo: LibraryRepository,
 ) -> Optional[UIState]:
     """
     Resume the agent with a user action.
@@ -76,14 +81,9 @@ async def resume_agent_handler(
         track_id = payload.get("track_id")
         logger.info(f"➕ Action: add track {track_id} to playlist {playlist_id}")
 
-        # Initialize repo
-        from api.repositories.library import LibraryRepository
-
-        repo = LibraryRepository(pool)
-
         # Add track to playlist
         try:
-            await repo.add_track_to_playlist(playlist_id, track_id)
+            await library_repo.add_track_to_playlist(playlist_id, track_id)
             logger.info(
                 f"✅ Successfully added track {track_id} to playlist {playlist_id}"
             )
