@@ -17,4 +17,6 @@ async def stream_audio_endpoint(
     media_repo: MediaRepo,
 ) -> StreamingResponse:
     """Stream audio from MinIO bucket. Example POST body: {"track_id": 155}"""
-    return await stream_audio_handler(stream_request.track_id, request, library_repo, media_repo)
+    return await stream_audio_handler(
+        stream_request.track_id, request, library_repo, media_repo
+    )

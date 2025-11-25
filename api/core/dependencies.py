@@ -38,23 +38,33 @@ def get_auth_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> AuthReposi
     return AuthRepository(pool)
 
 
-def get_library_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> LibraryRepository:
+def get_library_repository(
+    pool: asyncpg.Pool = Depends(get_db_pool),
+) -> LibraryRepository:
     return LibraryRepository(pool)
 
 
-def get_favorites_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> FavoritesRepository:
+def get_favorites_repository(
+    pool: asyncpg.Pool = Depends(get_db_pool),
+) -> FavoritesRepository:
     return FavoritesRepository(pool)
 
 
-def get_playlists_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> PlaylistsRepository:
+def get_playlists_repository(
+    pool: asyncpg.Pool = Depends(get_db_pool),
+) -> PlaylistsRepository:
     return PlaylistsRepository(pool)
 
 
-def get_coordinates_repository(pool: asyncpg.Pool = Depends(get_db_pool)) -> CoordinatesRepository:
+def get_coordinates_repository(
+    pool: asyncpg.Pool = Depends(get_db_pool),
+) -> CoordinatesRepository:
     return CoordinatesRepository(pool)
 
 
-def get_media_repository(minio_client: Minio = Depends(get_minio_client)) -> MediaRepository:
+def get_media_repository(
+    minio_client: Minio = Depends(get_minio_client),
+) -> MediaRepository:
     return MediaRepository(minio_client)
 
 

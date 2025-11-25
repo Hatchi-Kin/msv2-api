@@ -90,10 +90,37 @@ class BusinessRulesSettings(BaseSettings):
     DEFAULT_NEIGHBORS_LIMIT: int = 20
 
     AUDIO_STREAM_CHUNK_SIZE: int = 32 * 1024  # 32KB
-    
+
     # Inference service timeout (in seconds)
     # Cold start with model loading can take 3-5 minutes, warm requests are usually < 5s
     INFERENCE_TIMEOUT: int = 360
+
+
+class ExternalAPISettings(BaseSettings):
+    """External API credentials."""
+
+    GOOGLE_API_KEY: Optional[str] = None
+    ANTHROPIC_API_KEY: Optional[str] = None
+    SPOTIFY_CLIENT_ID: Optional[str] = None
+    SPOTIFY_CLIENT_SECRET: Optional[str] = None
+
+    # LLM Configuration
+    LLM_PROVIDER: str = (
+        # "google"
+        "anthropic"
+    )
+
+    # Reasoning Model (expensive, for structured decisions/JSON)
+    LLM_REASONING_MODEL: str = (
+        # "gemini-2.0-flash-thinking-exp-1219"
+        "claude-sonnet-4-5-20250929"
+    )
+
+    # Creative Model (cheap, for text generation)
+    LLM_CREATIVE_MODEL: str = (
+        # "gemini-2.0-flash"
+        "claude-haiku-4-5-20251001"
+    )
 
 
 class CORSSettings(BaseSettings):
@@ -112,9 +139,17 @@ class CORSSettings(BaseSettings):
 
 
 class Settings(
-    DatabaseSettings, MinioSettings, AuthSettings, CORSSettings, BusinessRulesSettings, BaseSettings
+    DatabaseSettings,
+    MinioSettings,
+    AuthSettings,
+    CORSSettings,
+    BusinessRulesSettings,
+    ExternalAPISettings,
+    BaseSettings,
 ):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=True)
+    model_config = SettingsConfigDict(
+        env_file=".env", extra="ignore", case_sensitive=True
+    )
 
 
 settings = Settings()

@@ -29,7 +29,10 @@ class CoordinatesRepository:
         return self.viz_table
 
     async def get_all_points(
-        self, limit: int, offset: int, viz_type: VisualizationType = VisualizationType.DEFAULT
+        self,
+        limit: int,
+        offset: int,
+        viz_type: VisualizationType = VisualizationType.DEFAULT,
     ) -> List[Dict]:
         """Get visualization points with track metadata."""
         table = self._get_table(viz_type)
@@ -45,14 +48,18 @@ class CoordinatesRepository:
         rows = await self.db.fetch(query, limit, offset)
         return [dict(row) for row in rows]
 
-    async def count_points(self, viz_type: VisualizationType = VisualizationType.DEFAULT) -> int:
+    async def count_points(
+        self, viz_type: VisualizationType = VisualizationType.DEFAULT
+    ) -> int:
         """Get total count of visualization points."""
         table = self._get_table(viz_type)
         query = f"SELECT COUNT(*) FROM {table};"
         result = await self.db.fetchval(query)
         return result or 0
 
-    async def get_statistics(self, viz_type: VisualizationType = VisualizationType.DEFAULT) -> Dict:
+    async def get_statistics(
+        self, viz_type: VisualizationType = VisualizationType.DEFAULT
+    ) -> Dict:
         """Get overall visualization statistics."""
         table = self._get_table(viz_type)
         # Total tracks
@@ -94,7 +101,10 @@ class CoordinatesRepository:
         }
 
     async def search_tracks(
-        self, query: str, limit: int, viz_type: VisualizationType = VisualizationType.DEFAULT
+        self,
+        query: str,
+        limit: int,
+        viz_type: VisualizationType = VisualizationType.DEFAULT,
     ) -> List[Dict]:
         """Search tracks by title, artist, album, or genre."""
         table = self._get_table(viz_type)
@@ -143,7 +153,10 @@ class CoordinatesRepository:
         }
 
     async def get_track_neighbors(
-        self, track_id: int, limit: int, viz_type: VisualizationType = VisualizationType.DEFAULT
+        self,
+        track_id: int,
+        limit: int,
+        viz_type: VisualizationType = VisualizationType.DEFAULT,
     ) -> Optional[List[Dict]]:
         """Get nearest neighbors of a track in 3D space using Euclidean distance."""
         table = self._get_table(viz_type)

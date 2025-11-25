@@ -22,7 +22,9 @@ class AlreadyExistsException(APIException):
     """Resource already exists exception."""
 
     def __init__(self, resource: str):
-        super().__init__(detail=f"{resource} already exists", status_code=status.HTTP_409_CONFLICT)
+        super().__init__(
+            detail=f"{resource} already exists", status_code=status.HTTP_409_CONFLICT
+        )
 
 
 class MaxLimitException(APIException):
@@ -46,4 +48,6 @@ class InactiveUserException(APIException):
     """Inactive user exception."""
 
     def __init__(self):
-        super().__init__(detail="User account is inactive", status_code=status.HTTP_403_FORBIDDEN)
+        super().__init__(
+            detail="User account is inactive", status_code=status.HTTP_403_FORBIDDEN
+        )

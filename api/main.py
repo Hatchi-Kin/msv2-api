@@ -11,6 +11,7 @@ from api.routers.inference import inference_router
 from api.routers.library import library_router
 from api.routers.media import media_router
 from api.routers.playlists import playlists_router
+from api.routers.agent import agent_router
 
 # ----------------------------------------------- #
 
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     app.include_router(coordinates_router)
     app.include_router(inference_router)
     app.include_router(health_router)
+    app.include_router(agent_router)
 
     return app
 

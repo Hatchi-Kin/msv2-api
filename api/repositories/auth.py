@@ -39,7 +39,9 @@ class AuthRepository:
         row = await self.db.fetchrow(query, email)
         return UserInDB(**dict(row)) if row else None
 
-    async def update_user_jti(self, user_id: int, jti: str, jti_expires_at: datetime) -> None:
+    async def update_user_jti(
+        self, user_id: int, jti: str, jti_expires_at: datetime
+    ) -> None:
         query = f"""
             UPDATE {self.table} 
             SET jti = $1, jti_expires_at = $2, updated_at = NOW() 

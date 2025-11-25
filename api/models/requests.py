@@ -30,7 +30,9 @@ class PointsPaginationParams(BaseModel):
 class SearchParams(BaseModel):
     """Search query parameters with validation."""
 
-    q: str = Field(min_length=2, max_length=100, description="Search query (min 2 characters)")
+    q: str = Field(
+        min_length=2, max_length=100, description="Search query (min 2 characters)"
+    )
     limit: int = Field(
         default=settings.DEFAULT_SEARCH_LIMIT,
         ge=1,

@@ -75,7 +75,9 @@ async def stream_audio_handler(
             raise NotFoundException("Audio file", track.relative_path)
         elif e.code in ["ServiceUnavailable", "SlowDown", "InternalError"]:
             logger.error(f"MinIO service unavailable: {e}")
-            raise APIException("Storage service temporarily unavailable", status_code=503)
+            raise APIException(
+                "Storage service temporarily unavailable", status_code=503
+            )
         else:
             logger.error(f"MinIO error while streaming track {track_id}: {str(e)}")
             raise APIException(f"Storage error: {str(e)}", status_code=500)

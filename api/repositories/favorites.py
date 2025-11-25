@@ -42,9 +42,7 @@ class FavoritesRepository:
 
     async def remove_favorite(self, user_id: int, track_id: int) -> bool:
         """Remove a track from user's favorites. Returns True if removed."""
-        query = (
-            f"DELETE FROM {self.favorites_table} WHERE user_id = $1 AND track_id = $2 RETURNING id;"
-        )
+        query = f"DELETE FROM {self.favorites_table} WHERE user_id = $1 AND track_id = $2 RETURNING id;"
         result = await self.db.fetchval(query, user_id, track_id)
         if result:
             logger.info(f"User {user_id} removed track {track_id} from favorites")

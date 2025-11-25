@@ -25,7 +25,10 @@ class MediaRepository:
         return stat.size
 
     def get_object_stream(
-        self, object_path: str, offset: Optional[int] = None, length: Optional[int] = None
+        self,
+        object_path: str,
+        offset: Optional[int] = None,
+        length: Optional[int] = None,
     ):
         """
         Get an object stream from MinIO.
@@ -42,5 +45,7 @@ class MediaRepository:
             S3Error: If object not found or other MinIO error
         """
         if offset is not None and length is not None:
-            return self.client.get_object(self.bucket, object_path, offset=offset, length=length)
+            return self.client.get_object(
+                self.bucket, object_path, offset=offset, length=length
+            )
         return self.client.get_object(self.bucket, object_path)

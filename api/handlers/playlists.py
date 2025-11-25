@@ -12,7 +12,9 @@ async def create_playlist_handler(
     return PlaylistSummary(**result)
 
 
-async def get_playlists_handler(user_id: int, playlists_repo: PlaylistsRepository) -> PlaylistsList:
+async def get_playlists_handler(
+    user_id: int, playlists_repo: PlaylistsRepository
+) -> PlaylistsList:
     playlists = await playlists_repo.get_user_playlists(user_id)
     return PlaylistsList(playlists=[PlaylistSummary(**p) for p in playlists])
 
@@ -74,7 +76,9 @@ async def remove_track_from_playlist_handler(
         raise NotFoundException("Playlist", str(playlist_id))
 
     # Remove track
-    removed = await playlists_repo.remove_track_from_playlist(user_id, playlist_id, track_id)
+    removed = await playlists_repo.remove_track_from_playlist(
+        user_id, playlist_id, track_id
+    )
     if not removed:
         raise NotFoundException("Track in playlist", str(track_id))
     return OperationResult(success=True, message="Track removed from playlist")

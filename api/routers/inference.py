@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from api.core.dependencies import CurrentUser, InferenceRepo
+from api.core.dependencies import InferenceRepo
 from api.handlers.inference import get_embeddings_handler, get_test
 from api.models.inference import EmbeddingRequest, EmbeddingResponse
 
@@ -18,9 +18,5 @@ async def get_embeddings_endpoint(
 
 
 @inference_router.get("/test")
-async def test_inf_api(
-    inference_repo: InferenceRepo,
-):
+async def test_inf_api(inference_repo: InferenceRepo):
     return await get_test(inference_repo)
-
-    

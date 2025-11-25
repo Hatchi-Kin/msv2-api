@@ -1,6 +1,6 @@
 import asyncpg
 from fastapi import APIRouter, Depends
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse, Response
 from minio import Minio
 
 from api.core.config import settings
@@ -12,7 +12,6 @@ health_router = APIRouter(tags=["health"], include_in_schema=False)
 
 @health_router.get("/")
 def root_endpoint():
-    """Root endpoint for quick API check."""
     return {"message": "Welcome to the MSV2 Webapp API!"}
 
 
@@ -53,6 +52,4 @@ async def get_health_check_endpoint(
 @health_router.get("/favicon.ico")
 async def get_favicon_endpoint():
     """Return 204 No Content for favicon requests to avoid errors."""
-    from fastapi.responses import Response
-
     return Response(status_code=204)
