@@ -68,7 +68,9 @@ async def get_tracklist_from_album_endpoint(
     library_repo: LibraryRepo,
     include_embeddings: bool = False,
 ):
-    return await get_tracklist_from_album_handler(album_folder, library_repo, include_embeddings)
+    return await get_tracklist_from_album_handler(
+        album_folder, library_repo, include_embeddings
+    )
 
 
 @library_router.get("/tracks/{artist_name}/{album_name}", response_model=TrackList)

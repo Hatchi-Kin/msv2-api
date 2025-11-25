@@ -42,23 +42,22 @@ class InferenceRepository:
             httpx.HTTPStatusError: If response has error status code
         """
         payload = EmbeddingRequest(path=audio_minio_path)
-        
+
         logger.debug(f"Calling inference service for: {audio_minio_path}")
-        
+
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
                 self.endpoint,
                 content=payload.model_dump_json(),
                 headers={"Content-Type": "application/json"},
             )
-            
+
             # Raise exception for error status codes
             response.raise_for_status()
-            
+
             result = EmbeddingResponse(**response.json())
             logger.debug(f"Received embeddings: shape {result.shape}")
             return result
-
 
     async def letstest(self):
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -69,5 +68,5 @@ class InferenceRepository:
             return {
                 "status_code": response.status_code,
                 "content": response.text,
-                "inference_url": self.test
+                "inference_url": self.test,
             }

@@ -40,7 +40,9 @@ async def get_favorites_endpoint(
     return await get_favorites_handler(current_user.id, favorites_repo)
 
 
-@favorites_router.get("/favorites/check/{track_id}", response_model=FavoriteCheckResponse)
+@favorites_router.get(
+    "/favorites/check/{track_id}", response_model=FavoriteCheckResponse
+)
 async def check_favorite_endpoint(
     track_id: int,
     current_user: CurrentUser,

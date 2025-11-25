@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Query
 
-from api.core.dependencies import CoordinatesRepo, CurrentUser, Neighbors, PointsPagination, Search
+from api.core.dependencies import (
+    CoordinatesRepo,
+    CurrentUser,
+    Neighbors,
+    PointsPagination,
+    Search,
+)
 from api.handlers.coordinates import (
     get_all_points_handler,
     get_cluster_handler,
@@ -30,7 +36,9 @@ async def get_coordinate_points(
     ),
 ):
     """Get all coordinate points with track metadata."""
-    return await get_all_points_handler(coords_repo, params.limit, params.offset, viz_type)
+    return await get_all_points_handler(
+        coords_repo, params.limit, params.offset, viz_type
+    )
 
 
 @coordinates_router.get("/stats", response_model=CoordinatesStats)
@@ -82,4 +90,6 @@ async def get_track_neighbors(
     ),
 ):
     """Get nearest neighbors of a track in 3D space."""
-    return await get_track_neighbors_handler(coords_repo, track_id, params.limit, viz_type)
+    return await get_track_neighbors_handler(
+        coords_repo, track_id, params.limit, viz_type
+    )

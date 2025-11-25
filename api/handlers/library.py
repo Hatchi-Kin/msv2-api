@@ -80,9 +80,13 @@ async def get_similar_tracks_handler(
     track_id: int, library_repo: LibraryRepository
 ) -> SimilarTrackList:
     # Get the original track to exclude its artist from recommendations
-    original_track = await library_repo.get_track_by_id(track_id, include_embeddings=False)
+    original_track = await library_repo.get_track_by_id(
+        track_id, include_embeddings=False
+    )
     if not original_track:
-        logger.warning(f"Similarity search requested for non-existent track: {track_id}")
+        logger.warning(
+            f"Similarity search requested for non-existent track: {track_id}"
+        )
         raise NotFoundException("Track", str(track_id))
 
     # Query for candidates to allow for artist diversity filtering

@@ -13,3 +13,4 @@ htmlcov/
 .vscode
 *.zip
 **/*-secret.yaml
+.ruff_cache/

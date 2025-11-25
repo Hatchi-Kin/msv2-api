@@ -5,7 +5,11 @@ from fastapi import Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 from api.core.config import settings
-from api.core.exceptions import AlreadyExistsException, InactiveUserException, UnauthorizedException
+from api.core.exceptions import (
+    AlreadyExistsException,
+    InactiveUserException,
+    UnauthorizedException,
+)
 from api.core.logger import logger
 from api.core.security import (
     create_access_token,
@@ -99,7 +103,9 @@ async def refresh_token_handler(
         or user.jti != refresh_token_payload.jti
         or user.jti_expires_at < datetime.now(timezone.utc)
     ):
-        logger.warning(f"Invalid refresh token attempt for: {refresh_token_payload.sub}")
+        logger.warning(
+            f"Invalid refresh token attempt for: {refresh_token_payload.sub}"
+        )
         raise UnauthorizedException("Invalid or expired refresh token")
 
     new_jti_uuid = str(uuid4())
@@ -136,6 +142,8 @@ async def logout_handler(
     response: Response,
 ) -> SuccessResponse:
     await auth_repo.clear_user_jti(current_user)
-    response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="none")
+    response.delete_cookie(
+        key="refresh_token", httponly=True, secure=True, samesite="none"
+    )
     logger.info(f"User logged out: {current_user}")
     return SuccessResponse(message="Logged out successfully")

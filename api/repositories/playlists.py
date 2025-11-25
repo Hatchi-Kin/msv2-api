@@ -34,7 +34,9 @@ class PlaylistsRepository:
 
     async def get_playlist_track_count(self, playlist_id: int) -> int:
         """Get count of tracks in playlist."""
-        query = f"SELECT COUNT(*) FROM {self.playlist_tracks_table} WHERE playlist_id = $1;"
+        query = (
+            f"SELECT COUNT(*) FROM {self.playlist_tracks_table} WHERE playlist_id = $1;"
+        )
         return await self.db.fetchval(query, playlist_id) or 0
 
     async def create_playlist(self, user_id: int, name: str) -> dict:
@@ -69,7 +71,9 @@ class PlaylistsRepository:
         rows = await self.db.fetch(query, user_id)
         return [dict(row) for row in rows]
 
-    async def get_playlist_detail(self, user_id: int, playlist_id: int) -> Optional[dict]:
+    async def get_playlist_detail(
+        self, user_id: int, playlist_id: int
+    ) -> Optional[dict]:
         """Get playlist with all tracks. Returns None if not found."""
         # Get playlist info
         playlist_query = f"""
@@ -100,7 +104,9 @@ class PlaylistsRepository:
             "updated_at": playlist["updated_at"],
         }
 
-    async def update_playlist_name(self, user_id: int, playlist_id: int, new_name: str) -> bool:
+    async def update_playlist_name(
+        self, user_id: int, playlist_id: int, new_name: str
+    ) -> bool:
         """Update playlist name. Returns True if updated, False if not found."""
         query = f"""
             UPDATE {self.playlists_table} 
@@ -121,7 +127,9 @@ class PlaylistsRepository:
             logger.info(f"User {user_id} deleted playlist {playlist_id}")
         return result is not None
 
-    async def add_track_to_playlist(self, user_id: int, playlist_id: int, track_id: int) -> bool:
+    async def add_track_to_playlist(
+        self, user_id: int, playlist_id: int, track_id: int
+    ) -> bool:
         """Add track to playlist. Returns True if added, False if already exists."""
 
         # We access the pool directly to ensure all steps happen in ONE transaction.
@@ -147,9 +155,7 @@ class PlaylistsRepository:
 
                 # 3. Update playlist timestamp (Only if insert succeeded)
                 if result:
-                    update_query = (
-                        f"UPDATE {self.playlists_table} SET updated_at = NOW() WHERE id = $1;"
-                    )
+                    update_query = f"UPDATE {self.playlists_table} SET updated_at = NOW() WHERE id = $1;"
                     await conn.execute(update_query, playlist_id)
                     logger.info(f"Added track {track_id} to playlist {playlist_id}")
 
@@ -185,7 +191,9 @@ class PlaylistsRepository:
         await self.db.execute(reorder_query, playlist_id, position)
 
         # Update playlist timestamp
-        update_query = f"UPDATE {self.playlists_table} SET updated_at = NOW() WHERE id = $1;"
+        update_query = (
+            f"UPDATE {self.playlists_table} SET updated_at = NOW() WHERE id = $1;"
+        )
         await self.db.execute(update_query, playlist_id)
 
         logger.info(f"Removed track {track_id} from playlist {playlist_id}")

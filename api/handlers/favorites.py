@@ -32,7 +32,9 @@ async def remove_favorite_handler(
     return OperationResult(success=True, message="Track removed from favorites")
 
 
-async def get_favorites_handler(user_id: int, favorites_repo: FavoritesRepository) -> FavoritesList:
+async def get_favorites_handler(
+    user_id: int, favorites_repo: FavoritesRepository
+) -> FavoritesList:
     tracks, total = await favorites_repo.get_user_favorites(user_id)
     return FavoritesList(tracks=tracks, total=total)
 
