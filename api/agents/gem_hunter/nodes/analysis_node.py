@@ -142,7 +142,7 @@ Do you already know any of these artists well? (I'll exclude them from recommend
             ]
             unique_genres = list(set(g for g in all_genres if g))[:3]
             logger.info(
-                f"🎵 Enriching {len(candidates)} tracks in parallel across {len(unique_genres)} genres: {', '.join(unique_genres)}..."
+                f"🎵 Enriching {len(candidates)} tracks in parallel across {len(unique_genres)} genres."
             )
 
             # Enrich all tracks in parallel using extracted function

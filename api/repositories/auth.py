@@ -27,7 +27,7 @@ class AuthRepository:
                       is_admin, created_at, updated_at, jti, jti_expires_at;
         """
         row = await self.db.fetchrow(query, email, username, hashed_password)
-        logger.info(f"User created: {email}")
+        # logger.info(f"User created: {email}")
         return UserInDB(**dict(row))
 
     async def get_user_by_email(self, email: str) -> Optional[UserInDB]:
@@ -57,7 +57,7 @@ class AuthRepository:
             WHERE id = $1;
         """
         await self.db.execute(query, user_id)
-        logger.info(f"Cleared JTI for user {user_id}")
+        # logger.info(f"Cleared JTI for user {user_id}")
 
     async def get_all_users(self) -> list[UserInDB]:
         query = f"""

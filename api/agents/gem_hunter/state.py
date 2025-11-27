@@ -42,6 +42,8 @@ class ButtonOption(BaseModel):
 
 class UIState(BaseModel):
     message: str
+    understanding: Optional[str] = None
+    selection: Optional[str] = None
     cards: List[TrackCard] = []
     options: List[ButtonOption] = []
     fun_fact: Optional[str] = None  # Fact to display during the *next* loading screen
