@@ -25,6 +25,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "black>=25.11.0",
+    "pytest>=9.0.1",
+    "pytest-asyncio>=1.3.0",
     "ruff>=0.14.6",
 ]
 
@@ -33,3 +35,12 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::DeprecationWarning:passlib.*",
+    "ignore::RuntimeWarning:asyncio.*"
+]
