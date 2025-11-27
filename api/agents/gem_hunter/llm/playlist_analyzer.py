@@ -71,7 +71,7 @@ Write a natural, conversational analysis:""",
         # Extract text from AIMessage
         analysis = result.content if hasattr(result, "content") else str(result)
 
-        logger.info(f"Generated playlist analysis: {analysis[:100]}...")
+        logger.info(f"Generated playlist analysis: {analysis[:30]}...")
         return analysis.strip()
 
     except Exception as e:

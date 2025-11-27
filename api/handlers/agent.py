@@ -16,9 +16,7 @@ checkpointer = MemorySaver()
 async def start_recommendation_handler(
     playlist_id: int, pool: asyncpg.Pool
 ) -> Optional[UIState]:
-    """
-    Start the Hidden Gem Hunter agent for a playlist.
-    """
+    """Start the Hidden Gem Hunter agent from a playlist."""
     app = build_agent_graph(pool, checkpointer=checkpointer)
 
     # Config for this thread
@@ -65,12 +63,10 @@ async def resume_agent_handler(
     pool: asyncpg.Pool,
     library_repo: LibraryRepository,
 ) -> Optional[UIState]:
-    """
-    Resume the agent with a user action.
-    """
-    logger.info(
-        f"🔵 Resume agent called: action={action}, playlist_id={playlist_id}, payload={payload}"
-    )
+    """Resume the agent with a user action."""
+    # logger.info(
+    #     f"🔵 Resume agent called: action={action}, playlist_id={playlist_id}, payload={payload}"
+    # )
 
     app = build_agent_graph(pool, checkpointer=checkpointer)
     thread_id = f"playlist_{playlist_id}"
@@ -136,7 +132,7 @@ async def resume_agent_handler(
     try:
         final_state = await app.ainvoke(None, config=config)
         ui_state = final_state.get("ui_state")
-        logger.info(f"📤 Returning ui_state: {ui_state}")
+        # logger.info(f"📤 Returning ui_state: {ui_state}")
         return ui_state
     except LLMFailureError as e:
         logger.error(f"❌ LLM service unavailable: {e}")

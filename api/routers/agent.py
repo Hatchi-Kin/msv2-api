@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from api.core.dependencies import get_db_pool, LibraryRepo, CurrentUser
 from api.agents.gem_hunter.state import UIState
 from api.handlers.agent import start_recommendation_handler, resume_agent_handler
+from api.models.agent import ResumeAgentRequest
 
 agent_router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -22,11 +23,14 @@ async def recommend_hidden_gems(
 async def resume_agent(
     library_repo: LibraryRepo,
     _user: CurrentUser,
-    action: str,
-    track_id: Optional[int],
-    playlist_id: int,
-    payload: Dict[str, Any],
+    request: ResumeAgentRequest,
     pool: asyncpg.Pool = Depends(get_db_pool),
 ):
     """Resume the agent with a user action (e.g. add track)."""
-    return await resume_agent_handler(action, playlist_id, payload, pool, library_repo)
+    # Ensure track_id is in payload if provided at top level
+    if request.track_id is not None:
+        request.payload["track_id"] = request.track_id
+        
+    return await resume_agent_handler(
+        request.action, request.playlist_id, request.payload, pool, library_repo
+    )

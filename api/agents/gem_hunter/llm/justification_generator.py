@@ -5,6 +5,7 @@ from collections import Counter
 from langchain_core.prompts import ChatPromptTemplate
 from api.core.logger import logger
 from api.agents.gem_hunter.exceptions import LLMFailureError
+from api.agents.gem_hunter.models import Justification
 
 
 async def generate_justification(
@@ -13,7 +14,7 @@ async def generate_justification(
     playlist_id: int,
     candidate_tracks: List[dict],
     llm,
-) -> str:
+) -> Justification:
     """Generate a two-part message: playlist understanding + selection rationale.
     
     Args:
@@ -80,20 +81,19 @@ async def generate_justification(
             parts.append(t["genre"])
         track_summaries.append(" - ".join(parts))
 
-    # Generate two-part message with LLM
+    # Generate structured justification with LLM
     prompt = ChatPromptTemplate.from_messages(
         [
             (
                 "system",
-                """You are a music expert helping users discover hidden gems. Write a concise paragraph (3-4 sentences) with TWO parts:
+                """You are a music expert helping users discover hidden gems. 
+Analyze the user's playlist profile and the selected tracks to provide a personalized explanation.
 
-PART 1 (Understanding): Start by explaining what you understood about the user's playlist based on the analysis.
-Example: "Based on your playlist, I noticed a strong preference for [genres] with [tempo/energy characteristics]."
+Your output must be a structured object with two fields:
+1. `understanding`: Explain what you understood about the user's playlist (genres, tempo, energy).
+2. `selection`: Explain how your selected tracks match that vibe and the user's preference.
 
-PART 2 (Selection): Explain how your selection matches that vibe and the user's chosen preference.
-Example: "To match your [vibe] preference, I've selected tracks that [selection logic]."
-
-Be specific, enthusiastic, and natural. Don't list track names.
+Be specific, enthusiastic, and natural. Don't list track names in the text.
 """,
             ),
             (
@@ -105,17 +105,19 @@ Selected Tracks: {tracks}""",
         ]
     )
 
-    chain = prompt | llm
+    # Use structured output
+    structured_llm = llm.with_structured_output(Justification)
+    chain = prompt | structured_llm
 
     try:
-        response = await chain.ainvoke(
+        response: Justification = await chain.ainvoke(
             {
                 "profile": str(playlist_profile),
                 "vibe": vibe_choice,
                 "tracks": "\n".join(track_summaries),
             }
         )
-        return response.content
+        return response
     except Exception as e:
         logger.error(f"❌ Justification generation failed: {e}", exc_info=True)
         raise LLMFailureError(f"Failed to generate recommendation explanation: {e}")

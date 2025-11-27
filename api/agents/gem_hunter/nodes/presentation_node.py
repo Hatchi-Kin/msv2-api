@@ -90,15 +90,23 @@ class PresentationNode:
         # Get playlist context for better justification
         playlist_id = state.get("playlist_id")
         candidate_tracks = state.get("candidate_tracks", [])
-        final_message = await generate_justification(
+        justification = await generate_justification(
             tracks, vibe_choice, playlist_id, candidate_tracks, self.llm
         )
 
         # Create UI State with full track cards
         cards = create_track_cards(tracks, pitches)
 
+        # Construct backward-compatible message
+        combined_message = (
+            f"**PART 1 (Understanding):** {justification.understanding}\n\n"
+            f"**PART 2 (Selection):** {justification.selection}"
+        )
+
         ui_state = UIState(
-            message=final_message,
+            message=combined_message,
+            understanding=justification.understanding,
+            selection=justification.selection,
             cards=cards,
             options=[],  # No buttons needed - UI has its own add-to-playlist functionality
         )

@@ -106,20 +106,20 @@ class ExternalAPISettings(BaseSettings):
 
     # LLM Configuration
     LLM_PROVIDER: str = (
-        # "google"
-        "anthropic"
+        "google"
+        # "anthropic"
     )
 
     # Reasoning Model (expensive, for structured decisions/JSON)
     LLM_REASONING_MODEL: str = (
-        # "gemini-2.0-flash-thinking-exp-1219"
-        "claude-sonnet-4-5-20250929"
+        "gemini-2.5-flash"
+        # "claude-sonnet-4-5-20250929"
     )
 
     # Creative Model (cheap, for text generation)
     LLM_CREATIVE_MODEL: str = (
-        # "gemini-2.0-flash"
-        "claude-haiku-4-5-20251001"
+        "gemini-2.5-flash-lite"
+        # "claude-haiku-4-5-20251001"
     )
 
 
