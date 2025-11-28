@@ -1,8 +1,9 @@
-name: Build and Push to Docker Hub
+name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - "**"
   workflow_dispatch:
 
 env:
@@ -10,8 +11,41 @@ env:
   REGISTRY: docker.io
 
 jobs:
-  build-and-push:
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/test_db
+          MINIO_ENDPOINT: dummy:9000
+          MINIO_ACCESS_KEY: miniodummyadmin
+          MINIO_SECRET_KEY: miniodummyadmin
+          MINIO_BUCKET: dummy-bucket
+          SECRET_KEY: tesdummyt-secret-key
+        run: uv run pytest tests/
+
+  build-and-push:
+    name: Build and Push to Docker Hub
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout code
