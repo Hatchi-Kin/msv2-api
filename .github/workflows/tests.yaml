@@ -27,4 +27,11 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run tests
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/test_db
+          MINIO_ENDPOINT: dummy:9000
+          MINIO_ACCESS_KEY: miniodummyadmin
+          MINIO_SECRET_KEY: miniodummyadmin
+          MINIO_BUCKET: dummy-bucket
+          SECRET_KEY: tesdummyt-secret-key
         run: uv run pytest tests/
