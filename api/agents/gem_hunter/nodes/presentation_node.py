@@ -13,7 +13,10 @@ from api.agents.gem_hunter.exceptions import LLMFailureError
 from api.core.logger import logger
 
 # Import extracted logic
-from api.agents.gem_hunter.core.vibe_matching import filter_by_vibe, generate_vibe_fun_fact
+from api.agents.gem_hunter.core.vibe_matching import (
+    filter_by_vibe,
+    generate_vibe_fun_fact,
+)
 from api.agents.gem_hunter.core.track_formatting import create_track_cards
 from api.agents.gem_hunter.llm.pitch_writer import generate_pitches
 from api.agents.gem_hunter.llm.justification_generator import generate_justification
@@ -31,6 +34,9 @@ class PresentationNode:
             from api.core.config import settings
 
             self.llm = get_llm(model=settings.LLM_CREATIVE_MODEL, temperature=0.7)
+            self.reasoning_llm = get_llm(
+                model=settings.LLM_REASONING_MODEL, temperature=0.0
+            )
         except Exception as e:
             logger.error(f"Failed to initialize LLM: {e}")
             raise LLMFailureError(f"Could not initialize LLM: {e}")
@@ -90,8 +96,9 @@ class PresentationNode:
         # Get playlist context for better justification
         playlist_id = state.get("playlist_id")
         candidate_tracks = state.get("candidate_tracks", [])
+        # Let LLM failures propagate - fail fast!
         justification = await generate_justification(
-            tracks, vibe_choice, playlist_id, candidate_tracks, self.llm
+            tracks, vibe_choice, playlist_id, candidate_tracks, self.reasoning_llm
         )
 
         # Create UI State with full track cards

@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional
 
 import asyncpg
 from fastapi import APIRouter, Depends
@@ -30,7 +30,7 @@ async def resume_agent(
     # Ensure track_id is in payload if provided at top level
     if request.track_id is not None:
         request.payload["track_id"] = request.track_id
-        
+
     return await resume_agent_handler(
         request.action, request.playlist_id, request.payload, pool, library_repo
     )

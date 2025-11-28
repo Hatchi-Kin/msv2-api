@@ -6,10 +6,10 @@ from collections import Counter
 
 def build_playlist_profile(tracks: List[dict]) -> Dict[str, Any]:
     """Build a statistical profile of the playlist.
-    
+
     Args:
         tracks: List of track dictionaries with metadata
-        
+
     Returns:
         Dictionary containing:
         - track_count: Number of tracks

@@ -7,11 +7,11 @@ def filter_by_known_artists(
     candidates: List[dict], known_artists: List[str]
 ) -> List[dict]:
     """Filter out tracks by artists the user already knows.
-    
+
     Args:
         candidates: List of candidate track dictionaries
         known_artists: List of artist names to exclude
-        
+
     Returns:
         Filtered list of tracks
     """
@@ -23,11 +23,11 @@ def filter_by_known_artists(
 
 def get_unique_artists(tracks: List[dict], limit: int = 5) -> List[str]:
     """Extract unique artist names from tracks.
-    
+
     Args:
         tracks: List of track dictionaries
         limit: Maximum number of artists to return
-        
+
     Returns:
         List of unique artist names
     """

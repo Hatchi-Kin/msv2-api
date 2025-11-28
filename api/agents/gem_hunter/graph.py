@@ -13,11 +13,11 @@ from api.agents.gem_hunter.nodes.presentation_node import PresentationNode
 def build_agent_graph(pool: asyncpg.Pool, checkpointer=None):
     """
     Builds and compiles the Hidden Gem Hunter LangGraph agent.
-    
+
     Args:
         pool: AsyncPG connection pool
         checkpointer: LangGraph checkpointer for state persistence
-        
+
     Returns:
         Compiled LangGraph application
     """

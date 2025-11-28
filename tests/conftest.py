@@ -1,11 +1,13 @@
+from typing import AsyncGenerator
+
 import pytest
 import pytest_asyncio
-from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from unittest.mock import MagicMock, AsyncMock
 
 from api.main import app
-from api.core.dependencies import get_db_pool, get_minio_client
+from api.core.dependencies import get_db_pool, get_minio_client, get_auth_repository
+from api.repositories.auth import AuthRepository
 
 
 # Mock MinIO
@@ -42,11 +44,6 @@ def override_db_pool(mock_db_pool):
     app.dependency_overrides[get_db_pool] = lambda: mock_db_pool
     yield
     app.dependency_overrides.pop(get_db_pool, None)
-
-
-# Mock AuthRepository
-from api.repositories.auth import AuthRepository
-from api.core.dependencies import get_auth_repository
 
 
 @pytest.fixture

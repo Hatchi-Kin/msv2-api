@@ -103,6 +103,7 @@ class ExternalAPISettings(BaseSettings):
     ANTHROPIC_API_KEY: Optional[str] = None
     SPOTIFY_CLIENT_ID: Optional[str] = None
     SPOTIFY_CLIENT_SECRET: Optional[str] = None
+    SPOTIFY_REFRESH_TOKEN: Optional[str] = None  # For user-authenticated access
 
     # LLM Configuration
     LLM_PROVIDER: str = (
@@ -112,14 +113,14 @@ class ExternalAPISettings(BaseSettings):
 
     # Reasoning Model (expensive, for structured decisions/JSON)
     LLM_REASONING_MODEL: str = (
-        "gemini-2.5-flash"
+        "gemini-2.5-pro"
         # "claude-sonnet-4-5-20250929"
     )
 
     # Creative Model (cheap, for text generation)
     LLM_CREATIVE_MODEL: str = (
-        "gemini-2.5-flash-lite"
-        # "claude-haiku-4-5-20251001"
+        "gemini-2.5-flash"
+        # "claude-3-5-haiku-20241022"
     )
 
 

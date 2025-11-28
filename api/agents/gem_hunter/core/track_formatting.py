@@ -1,16 +1,17 @@
 """Track formatting logic - create UI-ready track cards."""
 
 from typing import List, Dict
+
 from api.agents.gem_hunter.state import TrackCard
 
 
 def create_track_cards(tracks: List[dict], pitches: Dict[int, str]) -> List[TrackCard]:
     """Create TrackCard objects with full metadata.
-    
+
     Args:
         tracks: List of track dictionaries
         pitches: Dictionary mapping track_id to pitch text
-        
+
     Returns:
         List of TrackCard objects ready for UI
     """
@@ -46,6 +47,12 @@ def create_track_cards(tracks: List[dict], pitches: Dict[int, str]) -> List[Trac
                 created_at=created_at,
                 # Agent-specific field
                 reason=pitches.get(t["id"], "Recommended for you"),
+                # Audio Features
+                bpm=t.get("bpm"),
+                energy=t.get("energy"),
+                valence=t.get("valence"),
+                danceability=t.get("danceability"),
+                spotify_id=t.get("spotify_id"),
             )
         )
     return cards

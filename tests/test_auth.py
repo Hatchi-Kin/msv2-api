@@ -1,6 +1,5 @@
 import pytest
 from httpx import AsyncClient
-from api.models.auth import UserCreate
 from unittest.mock import MagicMock
 
 

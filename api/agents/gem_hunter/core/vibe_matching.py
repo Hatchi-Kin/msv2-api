@@ -7,56 +7,59 @@ from collections import Counter
 
 def filter_by_vibe(tracks: List[dict], vibe_choice: str) -> List[dict]:
     """Filter tracks based on vibe using Spotify audio features.
-    
+
     Args:
         tracks: List of track dictionaries with audio features
         vibe_choice: User's vibe choice ("Chill", "Energy", or "Surprise")
-        
+
     Returns:
         Filtered and sorted list of tracks (top 5)
     """
+    # Ensure we have tracks with features
+    tracks_with_features = [t for t in tracks if t.get("energy") is not None]
+
+    # Fallback if no features available: return random 5
+    if not tracks_with_features:
+        random.shuffle(tracks)
+        return tracks[:5]
+
     if vibe_choice == "Chill":
-        scored_tracks = []
-        for t in tracks:
-            score = 0
-            if t.get("energy") and t["energy"] < 0.5:
-                score += 2
-            if t.get("acousticness") and t["acousticness"] > 0.5:
-                score += 2
-            if t.get("bpm") and t["bpm"] < 110:
-                score += 1
-            if t.get("valence") and t["valence"] < 0.5:
-                score += 1
-            scored_tracks.append((t, score))
-        scored_tracks.sort(key=lambda x: x[1], reverse=True)
-        return [t[0] for t in scored_tracks[:5]]
+        # CHILL: Low Energy (< 0.6)
+        # Sort by lowest energy
+        filtered = [t for t in tracks_with_features if t["energy"] < 0.6]
+
+        # If too strict, relax threshold
+        if len(filtered) < 3:
+            filtered = [t for t in tracks_with_features if t["energy"] < 0.75]
+
+        # Sort by lowest energy (most chill)
+        filtered.sort(key=lambda x: x["energy"])
+        return filtered[:5]
 
     elif vibe_choice == "Energy":
-        scored_tracks = []
-        for t in tracks:
-            score = 0
-            if t.get("energy") and t["energy"] > 0.7:
-                score += 2
-            if t.get("danceability") and t["danceability"] > 0.6:
-                score += 2
-            if t.get("bpm") and t["bpm"] > 120:
-                score += 1
-            if t.get("valence") and t["valence"] > 0.6:
-                score += 1
-            scored_tracks.append((t, score))
-        scored_tracks.sort(key=lambda x: x[1], reverse=True)
-        return [t[0] for t in scored_tracks[:5]]
+        # ENERGY: High Energy (> 0.7)
+        # Sort by highest energy
+        filtered = [t for t in tracks_with_features if t["energy"] > 0.7]
 
-    # For "Surprise", keep all tracks as is
-    return tracks
+        # If too strict, relax threshold
+        if len(filtered) < 3:
+            filtered = [t for t in tracks_with_features if t["energy"] > 0.5]
+
+        # Sort by highest energy
+        filtered.sort(key=lambda x: x["energy"], reverse=True)
+        return filtered[:5]
+
+    # SURPRISE: Random selection
+    random.shuffle(tracks)
+    return tracks[:5]
 
 
 def generate_vibe_fun_fact(tracks: List[dict]) -> str:
     """Generate interesting fun facts about the tracks.
-    
+
     Args:
         tracks: List of track dictionaries with audio features
-        
+
     Returns:
         Fun fact string to display to user
     """
@@ -73,9 +76,7 @@ def generate_vibe_fun_fact(tracks: List[dict]) -> str:
         elif avg_tempo > 120:
             fun_facts.append(f"🎵 Average tempo: {int(avg_tempo)} BPM (upbeat)")
         elif avg_tempo < 90:
-            fun_facts.append(
-                f"🌙 Average tempo: {int(avg_tempo)} BPM (slow & dreamy)"
-            )
+            fun_facts.append(f"🌙 Average tempo: {int(avg_tempo)} BPM (slow & dreamy)")
         else:
             fun_facts.append(f"🎶 Average tempo: {int(avg_tempo)} BPM (moderate)")
 
@@ -101,9 +102,7 @@ def generate_vibe_fun_fact(tracks: List[dict]) -> str:
                 f"🎸 {int(avg_acoustic*100)}% acoustic - raw & organic sound"
             )
         elif avg_acoustic < 0.2:
-            fun_facts.append(
-                f"🎹 {int(avg_acoustic*100)}% acoustic - heavily produced"
-            )
+            fun_facts.append(f"🎹 {int(avg_acoustic*100)}% acoustic - heavily produced")
 
     # Fallback facts if audio features are missing
     if not fun_facts:

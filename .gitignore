@@ -14,3 +14,5 @@ htmlcov/
 *.zip
 **/*-secret.yaml
 .ruff_cache/
+
+scripts/

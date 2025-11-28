@@ -6,6 +6,7 @@ multiple providers (Google, Anthropic).
 
 from enum import Enum
 from typing import Optional
+
 from langchain_core.language_models import BaseChatModel
 
 from api.core.config import settings
@@ -54,7 +55,10 @@ def get_llm(
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         return ChatGoogleGenerativeAI(
-            model=model, temperature=temperature, google_api_key=settings.GOOGLE_API_KEY
+            model=model,
+            temperature=temperature,
+            google_api_key=settings.GOOGLE_API_KEY,
+            max_output_tokens=2048,  # Increased for structured output
         )
 
     elif provider == LLMProvider.ANTHROPIC:

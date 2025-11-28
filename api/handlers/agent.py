@@ -1,4 +1,5 @@
 from typing import Dict, Any, Optional
+
 import asyncpg
 from langgraph.checkpoint.memory import MemorySaver
 from fastapi import HTTPException
@@ -124,7 +125,8 @@ async def resume_agent_handler(
         vibe = payload.get("vibe")
         logger.info(f"🎵 Action: set_vibe to {vibe}")
         await app.aupdate_state(
-            config, {"vibe_checked": True, "vibe_choice": vibe, "next_step": "presentation"}
+            config,
+            {"vibe_checked": True, "vibe_choice": vibe, "next_step": "presentation"},
         )
 
     # Resume execution

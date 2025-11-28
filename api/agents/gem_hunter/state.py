@@ -1,4 +1,5 @@
 from typing import TypedDict, Annotated, List, Optional, Dict, Any
+
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel
 
@@ -31,6 +32,13 @@ class TrackCard(BaseModel):
 
     # Agent-specific field
     reason: str  # The "Pitch" - why this track is recommended
+
+    # Audio Features (for "Why" metrics)
+    bpm: Optional[float] = None
+    energy: Optional[float] = None
+    valence: Optional[float] = None
+    danceability: Optional[float] = None
+    spotify_id: Optional[str] = None
 
 
 class ButtonOption(BaseModel):

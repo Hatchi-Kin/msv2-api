@@ -2,7 +2,9 @@
 
 from typing import List
 from collections import Counter
+
 from langchain_core.prompts import ChatPromptTemplate
+
 from api.core.logger import logger
 from api.agents.gem_hunter.exceptions import LLMFailureError
 from api.agents.gem_hunter.models import Justification
@@ -16,14 +18,14 @@ async def generate_justification(
     llm,
 ) -> Justification:
     """Generate a two-part message: playlist understanding + selection rationale.
-    
+
     Args:
         tracks: Final selected tracks
         vibe_choice: User's vibe selection
         playlist_id: ID of the playlist
         candidate_tracks: Original candidate tracks before filtering
         llm: LangChain LLM instance
-        
+
     Returns:
         Natural language justification string
     """
@@ -79,9 +81,21 @@ async def generate_justification(
         parts = [f"{t['title']} by {t['artist']}"]
         if t.get("genre"):
             parts.append(t["genre"])
+
+        # Add metrics if available
+        metrics = []
+        if t.get("energy"):
+            metrics.append(f"Energy: {t['energy']:.2f}")
+        if t.get("valence"):
+            metrics.append(f"Valence: {t['valence']:.2f}")
+
+        if metrics:
+            parts.append(f"({', '.join(metrics)})")
+
         track_summaries.append(" - ".join(parts))
 
     # Generate structured justification with LLM
+    # Note: When using json_mode, the prompt MUST explicitly ask for JSON
     prompt = ChatPromptTemplate.from_messages(
         [
             (
@@ -89,24 +103,34 @@ async def generate_justification(
                 """You are a music expert helping users discover hidden gems. 
 Analyze the user's playlist profile and the selected tracks to provide a personalized explanation.
 
-Your output must be a structured object with two fields:
-1. `understanding`: Explain what you understood about the user's playlist (genres, tempo, energy).
-2. `selection`: Explain how your selected tracks match that vibe and the user's preference.
+You MUST respond with a valid JSON object with exactly these two fields:
+{{
+  "understanding": "Explain what you understood about the user's playlist (genres, tempo, energy).",
+  "selection": "Explain how your selected tracks match that vibe and the user's preference."
+}}
 
-Be specific, enthusiastic, and natural. Don't list track names in the text.
+Be specific, enthusiastic, and natural. Keep each field to 2-3 sentences maximum.
+IMPORTANT: Reference the audio metrics (Energy, Valence) provided in the track list to justify your choice (e.g., "I chose this because its high energy (0.85) matches your workout vibe").
+Don't list track names in the text.
+
+Respond ONLY with valid JSON, no other text.
 """,
             ),
             (
                 "human",
                 """Playlist Profile: {profile}
 User's Vibe Choice: {vibe}
-Selected Tracks: {tracks}""",
+Selected Tracks: {tracks}
+
+JSON response:""",
             ),
         ]
     )
 
     # Use structured output
-    structured_llm = llm.with_structured_output(Justification)
+    # Note: Using method="json_mode" for better Gemini 2.5 compatibility
+    # The default method can return None with Gemini 2.5 models due to malformed function calls
+    structured_llm = llm.with_structured_output(Justification, method="json_mode")
     chain = prompt | structured_llm
 
     try:
@@ -117,6 +141,12 @@ Selected Tracks: {tracks}""",
                 "tracks": "\n".join(track_summaries),
             }
         )
+
+        # Sanity check (should not be None with json_mode, but just in case)
+        if response is None:
+            logger.error("⚠️ LLM returned None even with json_mode")
+            raise LLMFailureError("LLM returned None response")
+
         return response
     except Exception as e:
         logger.error(f"❌ Justification generation failed: {e}", exc_info=True)

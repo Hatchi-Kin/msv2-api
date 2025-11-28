@@ -1,17 +1,19 @@
 """LLM-powered playlist analysis - generates natural language understanding."""
 
 from typing import Dict, Any
+
 from langchain_core.prompts import ChatPromptTemplate
+
 from api.core.logger import logger
 
 
 async def generate_playlist_analysis(profile: Dict[str, Any], llm) -> str:
     """Generate natural language analysis of the playlist using LLM.
-    
+
     Args:
         profile: Playlist profile dictionary from build_playlist_profile()
         llm: LangChain LLM instance
-        
+
     Returns:
         Natural language analysis string
     """

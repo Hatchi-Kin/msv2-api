@@ -1,8 +1,10 @@
 """LLM-powered pitch generation - creates compelling track descriptions."""
 
 from typing import List, Dict
+
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
+
 from api.core.logger import logger
 from api.agents.gem_hunter.exceptions import LLMFailureError
 
@@ -24,13 +26,13 @@ async def generate_pitches(
     tracks: List[dict], vibe_choice: str, user_preferences: str, llm
 ) -> Dict[int, str]:
     """Generate descriptive characteristics for each track.
-    
+
     Args:
         tracks: List of track dictionaries with metadata
         vibe_choice: User's selected vibe
         user_preferences: User's general preferences
         llm: LangChain LLM instance
-        
+
     Returns:
         Dictionary mapping track_id to pitch text
     """
