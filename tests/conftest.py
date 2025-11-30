@@ -1,9 +1,9 @@
 from typing import AsyncGenerator
+from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
-from unittest.mock import MagicMock, AsyncMock
 
 from api.main import app
 from api.core.dependencies import get_db_pool, get_minio_client, get_auth_repository

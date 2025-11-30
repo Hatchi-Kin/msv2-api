@@ -1,9 +1,11 @@
 """Unit tests for Tool Nodes v3."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from api.agents.gem_hunter.nodes.tools_v3 import ToolNodes
-from api.agents.gem_hunter.state_v3 import AgentState
+
+import pytest
+
+from api.agents.gem_hunter.nodes.tools import ToolNodes
+from api.agents.gem_hunter.state import AgentState
 
 
 @pytest.fixture
@@ -15,16 +17,13 @@ def mock_pool():
 @pytest.fixture
 def tools(mock_pool):
     """Create ToolNodes instance with mocked LLMs."""
-    with patch('api.agents.gem_hunter.nodes.tools_v3.get_llm') as mock_get_llm:
+    with patch("api.agents.gem_hunter.nodes.tools.get_llm") as mock_get_llm:
         mock_llm = MagicMock()
         mock_get_llm.return_value = mock_llm
         tools = ToolNodes(mock_pool)
         tools.creative_llm = mock_llm
         tools.reasoning_llm = mock_llm
         yield tools
-
-
-# Skipping database-dependent tests for now - these would require full integration testing
 
 
 @pytest.mark.asyncio
@@ -40,8 +39,7 @@ async def test_evaluate_results_sufficient(tools):
         "results_presented": False,
         "playlist_profile": {"avg_bpm": 120},
         "candidate_tracks": [
-            {"id": str(i), "artist": f"Artist {i}", "distance": 0.2}
-            for i in range(50)
+            {"id": str(i), "artist": f"Artist {i}", "distance": 0.2} for i in range(50)
         ],
         "quality_assessment": None,
         "known_artists": [],
@@ -53,9 +51,9 @@ async def test_evaluate_results_sufficient(tools):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await tools.evaluate_results(state)
-    
+
     assert result["quality_assessment"]["sufficient"] is True
     assert result["quality_assessment"]["quality_score"] > 0.6
 
@@ -83,9 +81,9 @@ async def test_evaluate_results_insufficient(tools):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await tools.evaluate_results(state)
-    
+
     assert result["quality_assessment"]["sufficient"] is False
     assert result["quality_assessment"]["quality_score"] == 0.0
 
@@ -117,9 +115,9 @@ async def test_check_knowledge(tools):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await tools.check_knowledge(state)
-    
+
     assert result["knowledge_checked"] is True
     options = result["ui_state"]["options"]
     # Should have unique artists + "None" + "All"
@@ -134,7 +132,7 @@ async def test_present_results_with_unknown_artists(tools):
     mock_response.content = "Great track!"
     tools.creative_llm.ainvoke = AsyncMock(return_value=mock_response)
     tools.reasoning_llm.ainvoke = AsyncMock(return_value=mock_response)
-    
+
     state: AgentState = {
         "playlist_id": "123",
         "user_id": "user1",
@@ -145,9 +143,27 @@ async def test_present_results_with_unknown_artists(tools):
         "results_presented": False,
         "playlist_profile": {"avg_bpm": 120},
         "candidate_tracks": [
-            {"id": "1", "title": "Track 1", "artist": "Known Artist", "bpm": 120, "energy": 0.7},
-            {"id": "2", "title": "Track 2", "artist": "Unknown Artist", "bpm": 120, "energy": 0.7},
-            {"id": "3", "title": "Track 3", "artist": "Unknown Artist 2", "bpm": 120, "energy": 0.7},
+            {
+                "id": "1",
+                "title": "Track 1",
+                "artist": "Known Artist",
+                "bpm": 120,
+                "energy": 0.7,
+            },
+            {
+                "id": "2",
+                "title": "Track 2",
+                "artist": "Unknown Artist",
+                "bpm": 120,
+                "energy": 0.7,
+            },
+            {
+                "id": "3",
+                "title": "Track 3",
+                "artist": "Unknown Artist 2",
+                "bpm": 120,
+                "energy": 0.7,
+            },
         ],
         "quality_assessment": {"sufficient": True},
         "known_artists": ["Known Artist"],
@@ -159,9 +175,9 @@ async def test_present_results_with_unknown_artists(tools):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await tools.present_results(state)
-    
+
     assert result["results_presented"] is True
     cards = result["ui_state"]["cards"]
     # Should prioritize unknown artists
@@ -191,9 +207,9 @@ async def test_present_results_no_candidates(tools):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await tools.present_results(state)
-    
+
     assert result["results_presented"] is True
     assert "couldn't find" in result["ui_state"]["message"].lower()
     assert len(result["ui_state"]["cards"]) == 0

@@ -1,98 +1,115 @@
 """Supervisor Node - The brain that makes decisions."""
 
 from typing import Literal, Dict, Any
+
 from pydantic import BaseModel, Field
-from api.agents.gem_hunter.state_v3 import AgentState
+
+from api.agents.gem_hunter.state import AgentState
 from api.agents.gem_hunter.llm_factory import get_llm
 from api.core.config import settings
 from api.core.logger import logger
 
+
 class SupervisorDecision(BaseModel):
     """Structured output from supervisor LLM."""
+
     next_action: Literal[
         "analyze_playlist",
         "search_tracks",
         "evaluate_results",
         "check_knowledge",
         "present_results",
-        "END"
+        "END",
     ]
     reasoning: str = Field(description="Why this action makes sense")
     parameters: Dict[str, Any] = Field(default_factory=dict)
 
+
 class SupervisorNode:
     """The brain - decides what to do next."""
-    
+
     def __init__(self):
         self.llm = get_llm(model=settings.LLM_REASONING_MODEL, temperature=0)
-    
+
     async def execute(self, state: AgentState) -> Dict[str, Any]:
         """Analyze state and decide next action."""
         logger.info("🧠 Supervisor thinking...")
-        
+
+        # Handle both dict and Pydantic model
+        if isinstance(state, dict):
+            state = AgentState(**state)
+
         # Safety: Max iterations
-        iteration = state.get("iteration_count", 0)
+        iteration = state.iteration_count
         if iteration >= 10:
             logger.warning("⚠️ Max iterations reached, forcing END")
             return {
                 "next_action": "present_results",
                 "supervisor_reasoning": "Max iterations reached",
-                "iteration_count": iteration + 1
+                "iteration_count": iteration + 1,
             }
-        
+
         # Loop detection: Check last 3 actions
-        history = state.get("action_history", [])
+        history = state.action_history
         if len(history) >= 3 and len(set(history[-3:])) == 1:
-            logger.warning(f"⚠️ Loop detected: {history[-3:]}. Forcing different action.")
+            logger.warning(
+                f"⚠️ Loop detected: {history[-3:]}. Forcing different action."
+            )
             # Force present_results to break loop
             return {
                 "next_action": "present_results",
                 "supervisor_reasoning": "Loop detected, presenting results",
                 "iteration_count": iteration + 1,
-                "action_history": history + ["present_results"]
+                "action_history": history + ["present_results"],
             }
-        
+
         # Build context for LLM
         context = self._build_context(state)
-        
+
         # Get decision from LLM
         try:
-            decision = await self.llm.with_structured_output(SupervisorDecision).ainvoke(context)
+            decision = await self.llm.with_structured_output(
+                SupervisorDecision
+            ).ainvoke(context)
             logger.info(f"✅ Decision: {decision.next_action}")
             logger.info(f"   Reasoning: {decision.reasoning}")
-            
+
             # Update action history
             new_history = (history + [decision.next_action])[-3:]  # Keep last 3
-            
+
             return {
                 "next_action": decision.next_action,
                 "supervisor_reasoning": decision.reasoning,
                 "tool_parameters": decision.parameters,
                 "action_history": new_history,
-                "iteration_count": iteration + 1
+                "iteration_count": iteration + 1,
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Supervisor LLM failed: {e}")
             return {
                 "next_action": "present_results",
                 "supervisor_reasoning": f"Error: {e}",
-                "iteration_count": iteration + 1
+                "iteration_count": iteration + 1,
             }
-    
+
     def _build_context(self, state: AgentState) -> str:
         """Build LLM prompt from current state."""
-        
+
+        # Handle both dict and Pydantic model
+        if isinstance(state, dict):
+            state = AgentState(**state)
+
         # Extract state
-        playlist_analyzed = state.get("playlist_analyzed", False)
-        vibe = state.get("vibe_choice")
-        candidates = state.get("candidate_tracks", [])
-        quality = state.get("quality_assessment") or {}
-        knowledge_checked = state.get("knowledge_checked", False)
-        known_artists = state.get("known_artists", [])
-        iteration = state.get("iteration_count", 0)
-        search_iter = state.get("search_iteration", 0)
-        
+        playlist_analyzed = state.playlist_analyzed
+        vibe = state.vibe_choice
+        candidates = state.candidate_tracks
+        quality = state.quality_assessment or {}
+        knowledge_checked = state.knowledge_checked
+        known_artists = state.known_artists
+        iteration = state.iteration_count
+        search_iter = state.search_iteration
+
         return f"""You are a music curator supervisor. Your mission: create a 5-track playlist of hidden gems.
 
 Current State:

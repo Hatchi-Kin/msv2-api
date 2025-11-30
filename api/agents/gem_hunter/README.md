@@ -22,7 +22,7 @@ An intelligent music recommendation agent that curates personalized playlists of
    │PLAYLIST │───────▶│ TRACKS  │───────▶│ RESULTS │
    └─────────┘        └─────────┘        └─────────┘
         │                                       │
-        │ (user selects vibe)                  │
+        │ (user selects vibe)                   │
         ▼                                       ▼
    ┌─────────┐                           ┌─────────┐
    │  CHECK  │◀──────────────────────────│ PRESENT │
@@ -48,22 +48,18 @@ An intelligent music recommendation agent that curates personalized playlists of
 
 ## File Structure
 
-```
+```sh
 api/agents/gem_hunter/
 ├── README.md                    # This file
-├── graph_v3.py                  # LangGraph workflow definition
-├── state_v3.py                  # State TypedDict definitions
+├── graph.py                     # LangGraph workflow definition
+├── state.py                     # State Pydantic definitions
 ├── llm_factory.py               # LLM initialization
 ├── exceptions.py                # Custom exceptions
 ├── nodes/
-│   ├── supervisor_v3.py         # Supervisor decision logic
-│   └── tools_v3.py              # Tool implementations
-├── tools/
-│   └── search_tool.py           # Database search utilities
-└── docs/
-    ├── FRONTEND_INTEGRATION_GUIDE.md
-    ├── MIGRATION_V2_TO_V3.md
-    └── KNOWN_ISSUES.md
+│   ├── supervisor.py            # Supervisor decision logic
+│   └── tools.py                 # Tool implementations
+└──  tools/
+    └── search_tool.py           # Database search utilities
 ```
 
 ## Quick Start
@@ -71,12 +67,12 @@ api/agents/gem_hunter/
 ### Backend
 
 ```python
-from api.agents.gem_hunter.graph_v3 import build_agent_graph_v3
+from api.agents.gem_hunter.graph import build_agent_graph
 from langgraph.checkpoint.memory import MemorySaver
 
 # Build graph
 checkpointer = MemorySaver()
-app = build_agent_graph_v3(pool, checkpointer=checkpointer)
+app = build_agent_graph(pool, checkpointer=checkpointer)
 
 # Start agent
 config = {"configurable": {"thread_id": f"playlist_{playlist_id}"}}
@@ -94,38 +90,42 @@ ui_state = result.get("ui_state")
 
 ```typescript
 // Start agent
-const response = await fetch('/agent/recommend/123', { method: 'POST' });
+const response = await fetch("/agent/recommend/123", { method: "POST" });
 const uiState = await response.json();
 
 // Resume with user action
-await fetch('/agent/resume', {
-  method: 'POST',
+await fetch("/agent/resume", {
+  method: "POST",
   body: JSON.stringify({
-    action: 'set_vibe',
+    action: "set_vibe",
     playlist_id: 123,
-    payload: { vibe: 'similar' }
-  })
+    payload: { vibe: "similar" },
+  }),
 });
 ```
 
 ## Agent Flow
 
 1. **Analyze Playlist** (automatic)
+
    - Calculates audio feature averages (BPM, energy, brightness, etc.)
    - Generates vibe description
    - Asks user to select desired vibe
    - **User interruption #1**
 
 2. **Search Tracks** (automatic)
+
    - Searches library using vector similarity
    - Applies vibe-based constraints
    - Returns 50 candidates
 
 3. **Evaluate Results** (automatic)
+
    - Assesses quality and quantity
    - Decides if more searching needed
 
 4. **Check Knowledge** (automatic)
+
    - Extracts unique artists from candidates
    - Asks user which artists they know
    - **User interruption #2**
@@ -141,29 +141,29 @@ await fetch('/agent/resume', {
 The agent uses LangGraph's checkpointing for state persistence:
 
 ```python
-class AgentState(TypedDict):
+class AgentState(BaseModel):
     # Input
     playlist_id: str
     user_id: str
-    
+
     # Flow control
     playlist_analyzed: bool
     vibe_choice: Optional[str]
     search_iteration: int
     knowledge_checked: bool
     results_presented: bool
-    
+
     # Data
     playlist_profile: Dict[str, Any]
     candidate_tracks: List[Track]
     known_artists: List[str]
-    
+
     # Supervisor
     next_action: str
     supervisor_reasoning: str
     action_history: List[str]
     iteration_count: int
-    
+
     # UI
     ui_state: UIState
     error: Optional[str]
@@ -173,12 +173,12 @@ class AgentState(TypedDict):
 
 ```typescript
 interface UIState {
-  message: string;              // Main message to display
-  understanding?: string;       // Part 1: Playlist understanding
-  selection?: string;           // Part 2: Track selection reasoning
-  options: ButtonOption[];      // User action buttons
-  cards: TrackCard[];          // Recommended tracks
-  thought_process: string[];   // Internal reasoning (optional)
+  message: string; // Main message to display
+  understanding?: string; // Part 1: Playlist understanding
+  selection?: string; // Part 2: Track selection reasoning
+  options: ButtonOption[]; // User action buttons
+  cards: TrackCard[]; // Recommended tracks
+  thought_process: string[]; // Internal reasoning (optional)
 }
 ```
 
@@ -208,19 +208,20 @@ MAX_AGENT_ITERATIONS=10
 
 ```bash
 # Unit tests
-pytest tests/test_supervisor_v3.py
-pytest tests/test_tools_v3.py
+pytest tests/test_supervisor.py
+pytest tests/test_tools.py
 
 # Integration test
-pytest tests/test_integration_v3.py
+pytest tests/test_integration.py
 
 # Manual test (with real database)
-python tests/manual_agent_test_v3.py
+python tests/run_agent_cli.py
 ```
 
 ## Error Handling
 
 The agent handles:
+
 - Empty playlists (< 5 tracks)
 - No candidates found
 - User knows all artists
@@ -233,12 +234,14 @@ All errors result in graceful messages to the user.
 ## API Endpoints
 
 ### Start Agent
+
 ```
 POST /agent/recommend/{playlist_id}
 Response: UIState
 ```
 
 ### Resume Agent
+
 ```
 POST /agent/resume
 Body: {
@@ -249,20 +252,14 @@ Body: {
 Response: UIState
 ```
 
-## Migration from V2
-
-See `docs/MIGRATION_V2_TO_V3.md` for detailed migration guide.
-
-## Known Issues
-
-See `docs/KNOWN_ISSUES.md` for current limitations and workarounds.
 
 ## Contributing
 
 When modifying the agent:
-1. Update state definitions in `state_v3.py`
-2. Add new tools in `nodes/tools_v3.py`
-3. Update supervisor decision rules in `nodes/supervisor_v3.py`
+
+1. Update state definitions in `state.py`
+2. Add new tools in `nodes/tools.py`
+3. Update supervisor decision rules in `nodes/supervisor.py`
 4. Update this README
 5. Add tests
 

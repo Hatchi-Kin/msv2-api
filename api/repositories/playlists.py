@@ -212,9 +212,9 @@ class PlaylistsRepository:
     async def get_playlist_stats(self, playlist_id: int) -> dict:
         """Get stats for a playlist (avg bpm, energy, top genres)."""
         from api.core.logger import logger
-        
+
         logger.info(f"🔍 Getting stats for playlist {playlist_id}")
-        
+
         query = f"""
             SELECT 
                 AVG(m.bpm) as avg_bpm,
@@ -228,7 +228,7 @@ class PlaylistsRepository:
         """
         stats = await self.db.fetchrow(query, playlist_id)
         logger.info(f"📊 Raw stats from DB: {dict(stats) if stats else None}")
-        
+
         # Get top genres separately
         genre_query = f"""
             SELECT m.genre, COUNT(*) as count
@@ -240,7 +240,7 @@ class PlaylistsRepository:
             LIMIT 3;
         """
         genres = await self.db.fetch(genre_query, playlist_id)
-        
+
         result = dict(stats) if stats else {}
         result["top_genres"] = [g["genre"] for g in genres]
         logger.info(f"✅ Final stats: {result}")

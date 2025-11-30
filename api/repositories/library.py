@@ -291,19 +291,15 @@ class LibraryRepository:
         max_bpm: float = 999,
         min_energy: float = 0,
         max_energy: float = 1.0,
-        limit: int = 10
+        limit: int = 10,
     ) -> list[Track]:
         """
         Search for tracks similar to the centroid, applying filters.
         """
-        from api.core.db_codecs import decode_vector
-        
-        # Ensure centroid is a string for pgvector
-        centroid_str = str(centroid).replace(" ", "")
-        
+
         # Convert empty lists to None for cleaner SQL handling, or rely on explicit casting
         # asyncpg needs explicit casting for arrays
-        
+
         query = f"""
             SELECT *, 
                    1 - (embedding_512_vector <=> $1) as similarity
@@ -316,26 +312,27 @@ class LibraryRepository:
             ORDER BY embedding_512_vector <=> $1
             LIMIT $8;
         """
-        
+
         rows = await self.db.fetch(
-            query, 
-            centroid, 
-            exclude_ids or [], 
-            exclude_artists or [], 
-            min_bpm, 
-            max_bpm, 
-            min_energy, 
-            max_energy, 
-            limit
+            query,
+            centroid,
+            exclude_ids or [],
+            exclude_artists or [],
+            min_bpm,
+            max_bpm,
+            min_energy,
+            max_energy,
+            limit,
         )
-        
+
         # Decode embeddings explicitly
         tracks = []
         for row in rows:
             track_dict = dict(row)
-            if 'embedding_512_vector' in track_dict:
-                track_dict['embedding_512_vector'] = decode_vector(track_dict['embedding_512_vector'])
+            if "embedding_512_vector" in track_dict:
+                track_dict["embedding_512_vector"] = decode_vector(
+                    track_dict["embedding_512_vector"]
+                )
             tracks.append(Track(**track_dict))
-        
-        return tracks
 
+        return tracks

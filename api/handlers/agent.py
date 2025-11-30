@@ -4,8 +4,8 @@ import asyncpg
 from langgraph.checkpoint.memory import MemorySaver
 from fastapi import HTTPException
 
-from api.agents.gem_hunter.graph_v3 import build_agent_graph_v3
-from api.agents.gem_hunter.state_v3 import AgentState
+from api.agents.gem_hunter.graph import build_agent_graph
+from api.agents.gem_hunter.state import AgentState
 from api.agents.gem_hunter.exceptions import LLMFailureError
 from api.repositories.library import LibraryRepository
 from api.core.logger import logger
@@ -18,7 +18,7 @@ async def start_recommendation_handler(
     playlist_id: int, pool: asyncpg.Pool
 ) -> Optional[Dict[str, Any]]:
     """Start the Hidden Gem Hunter agent from a playlist (v3 supervisor pattern)."""
-    app = build_agent_graph_v3(pool, checkpointer=checkpointer)
+    app = build_agent_graph(pool, checkpointer=checkpointer)
 
     # Config for this thread
     thread_id = f"playlist_{playlist_id}"
@@ -72,18 +72,20 @@ async def resume_agent_handler(
     """Resume the agent with a user action (v3 supervisor pattern)."""
     logger.info(f"🔵 Resume agent: action={action}, playlist_id={playlist_id}")
 
-    app = build_agent_graph_v3(pool, checkpointer=checkpointer)
+    app = build_agent_graph(pool, checkpointer=checkpointer)
     thread_id = f"playlist_{playlist_id}"
     config = {"configurable": {"thread_id": thread_id}}
 
     # Handle Action
     if action == "add":
-        track_id = payload.get("track_id")
+        track_id = payload.get("track_id")  # payload is a dict, not Pydantic
         logger.info(f"➕ Action: add track {track_id} to playlist {playlist_id}")
 
         try:
             await library_repo.add_track_to_playlist(playlist_id, track_id)
-            logger.info(f"✅ Successfully added track {track_id} to playlist {playlist_id}")
+            logger.info(
+                f"✅ Successfully added track {track_id} to playlist {playlist_id}"
+            )
             return None  # Frontend handles UI update
         except Exception as e:
             logger.error(f"Failed to add track: {e}")
@@ -91,19 +93,18 @@ async def resume_agent_handler(
 
     elif action == "set_vibe":
         # User selected vibe after analyze_playlist
-        vibe = payload.get("vibe")
+        vibe = payload.get("vibe")  # payload is a dict, not Pydantic
         logger.info(f"🎵 Action: set_vibe to {vibe}")
-        
-        await app.aupdate_state(
-            config,
-            {"vibe_choice": vibe}
-        )
+
+        await app.aupdate_state(config, {"vibe_choice": vibe})
 
     elif action == "submit_knowledge":
         # User selected known artists after check_knowledge
-        known_artists = payload.get("known_artists", [])
+        known_artists = payload.get(
+            "known_artists", []
+        )  # payload is a dict, not Pydantic
         logger.info(f"✋ Action: submit_knowledge, known_artists={known_artists}")
-        
+
         # Handle special values
         if known_artists == ["none"]:
             known_artists = []
@@ -111,15 +112,14 @@ async def resume_agent_handler(
             # Get all artists from candidates
             state = await app.aget_state(config)
             candidates = state.values.get("candidate_tracks", [])
-            known_artists = list(set(
-                t.get("artist") if isinstance(t, dict) else t.artist
-                for t in candidates[:20]
-            ))
-        
-        await app.aupdate_state(
-            config,
-            {"known_artists": known_artists}
-        )
+            known_artists = list(
+                set(
+                    t.get("artist") if isinstance(t, dict) else t.artist
+                    for t in candidates[:20]
+                )
+            )
+
+        await app.aupdate_state(config, {"known_artists": known_artists})
 
     else:
         logger.warning(f"⚠️ Unknown action: {action}")

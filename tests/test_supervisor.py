@@ -1,15 +1,17 @@
 """Unit tests for Supervisor Node v3."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from api.agents.gem_hunter.nodes.supervisor_v3 import SupervisorNode, SupervisorDecision
-from api.agents.gem_hunter.state_v3 import AgentState
+
+import pytest
+
+from api.agents.gem_hunter.nodes.supervisor import SupervisorNode, SupervisorDecision
+from api.agents.gem_hunter.state import AgentState
 
 
 @pytest.fixture
 def supervisor():
     """Create supervisor instance with mocked LLM."""
-    with patch('api.agents.gem_hunter.nodes.supervisor_v3.get_llm') as mock_get_llm:
+    with patch("api.agents.gem_hunter.nodes.supervisor.get_llm") as mock_get_llm:
         mock_llm = MagicMock()
         mock_get_llm.return_value = mock_llm
         supervisor = SupervisorNode()
@@ -24,13 +26,13 @@ async def test_supervisor_initial_state(supervisor):
     mock_decision = SupervisorDecision(
         next_action="analyze_playlist",
         reasoning="Playlist not analyzed yet",
-        parameters={}
+        parameters={},
     )
-    
+
     mock_structured = AsyncMock()
     mock_structured.ainvoke = AsyncMock(return_value=mock_decision)
     supervisor.llm.with_structured_output = MagicMock(return_value=mock_structured)
-    
+
     # Initial state
     state: AgentState = {
         "playlist_id": "123",
@@ -52,9 +54,9 @@ async def test_supervisor_initial_state(supervisor):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await supervisor.execute(state)
-    
+
     assert result["next_action"] == "analyze_playlist"
     assert result["iteration_count"] == 1
     assert "analyze_playlist" in result["action_history"]
@@ -83,9 +85,9 @@ async def test_supervisor_max_iterations(supervisor):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await supervisor.execute(state)
-    
+
     assert result["next_action"] == "present_results"
     assert result["supervisor_reasoning"] == "Max iterations reached"
     assert result["iteration_count"] == 11
@@ -114,9 +116,9 @@ async def test_supervisor_loop_detection(supervisor):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await supervisor.execute(state)
-    
+
     assert result["next_action"] == "present_results"
     assert "Loop detected" in result["supervisor_reasoning"]
     assert "present_results" in result["action_history"]
@@ -129,7 +131,7 @@ async def test_supervisor_llm_failure(supervisor):
     mock_structured = AsyncMock()
     mock_structured.ainvoke = AsyncMock(side_effect=Exception("LLM service down"))
     supervisor.llm.with_structured_output = MagicMock(return_value=mock_structured)
-    
+
     state: AgentState = {
         "playlist_id": "123",
         "user_id": "user1",
@@ -150,9 +152,9 @@ async def test_supervisor_llm_failure(supervisor):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await supervisor.execute(state)
-    
+
     assert result["next_action"] == "present_results"
     assert "Error" in result["supervisor_reasoning"]
 
@@ -161,15 +163,13 @@ async def test_supervisor_llm_failure(supervisor):
 async def test_supervisor_action_history_tracking(supervisor):
     """Test supervisor correctly tracks action history."""
     mock_decision = SupervisorDecision(
-        next_action="search_tracks",
-        reasoning="Need to search",
-        parameters={}
+        next_action="search_tracks", reasoning="Need to search", parameters={}
     )
-    
+
     mock_structured = AsyncMock()
     mock_structured.ainvoke = AsyncMock(return_value=mock_decision)
     supervisor.llm.with_structured_output = MagicMock(return_value=mock_structured)
-    
+
     state: AgentState = {
         "playlist_id": "123",
         "user_id": "user1",
@@ -190,9 +190,13 @@ async def test_supervisor_action_history_tracking(supervisor):
         "ui_state": None,
         "error": None,
     }
-    
+
     result = await supervisor.execute(state)
-    
+
     # Should keep last 3 actions
     assert len(result["action_history"]) == 3
-    assert result["action_history"] == ["analyze_playlist", "evaluate_results", "search_tracks"]
+    assert result["action_history"] == [
+        "analyze_playlist",
+        "evaluate_results",
+        "search_tracks",
+    ]
