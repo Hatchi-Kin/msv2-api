@@ -1,89 +1,57 @@
-from typing import TypedDict, Annotated, List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, TypedDict, Annotated
+from operator import add
 
-from langgraph.graph.message import add_messages
-from pydantic import BaseModel
+class Track(TypedDict):
+    id: str
+    title: str
+    artist: str
+    album: str
+    uri: str
+    image_url: Optional[str]
+    preview_url: Optional[str]
+    bpm: Optional[float]
+    energy: Optional[float]
+    danceability: Optional[float]
+    valence: Optional[float]
+    genres: List[str]
+    explanation: Optional[str]  # Why this track was chosen
 
-
-class TrackCard(BaseModel):
-    """Full track object with agent's pitch/reason.
-
-    Includes all MegasetTrack fields so the frontend can use
-    the same card components and player functionality.
-    """
-
-    # Core identification
-    id: int
-    filename: str
-    filepath: str
-    relative_path: str
-
-    # Metadata
-    album_folder: Optional[str] = None
-    artist_folder: Optional[str] = None
-    filesize: Optional[int] = None
-    title: Optional[str] = None
-    artist: Optional[str] = None
-    album: Optional[str] = None
-    year: Optional[int] = None
-    tracknumber: Optional[int] = None
-    genre: Optional[str] = None
-    top_5_genres: Optional[str] = None
-    created_at: Optional[str] = None
-
-    # Agent-specific field
-    reason: str  # The "Pitch" - why this track is recommended
-
-    # Audio Features (for "Why" metrics)
-    bpm: Optional[float] = None
-    energy: Optional[float] = None
-    valence: Optional[float] = None
-    danceability: Optional[float] = None
-    spotify_id: Optional[str] = None
-
-
-class ButtonOption(BaseModel):
-    id: str  # e.g., "add_track_123"
-    label: str
-    action: str  # "add", "search_more", "reject"
-    payload: Dict[str, Any]
-
-
-class UIState(BaseModel):
+class UIState(TypedDict):
     message: str
-    understanding: Optional[str] = None
-    selection: Optional[str] = None
-    cards: List[TrackCard] = []
-    options: List[ButtonOption] = []
-    fun_fact: Optional[str] = None  # Fact to display during the *next* loading screen
+    options: List[Dict[str, Any]]
+    cards: Optional[List[Dict[str, Any]]]
+    thought_process: List[str]
 
-
-class AgentState(TypedDict, total=False):
-    # Standard LangGraph message history (for chat context if needed)
-    messages: Annotated[List[dict], add_messages]
-
-    # Context
-    playlist_id: int
-    user_preferences: str
-
-    # Working Memory
-    centroid: Optional[List[float]]
-    candidate_tracks: List[dict]  # Raw track dicts from DB
-    enriched_tracks: List[dict]  # Tracks with Spotify data
-
-    # Output State (what the UI renders)
-    ui_state: Optional[dict]  # Changed from UIState to dict for serialization
-
-    # Fun facts to display during loading
-    fun_fact_1: Optional[str]  # Shown during first wait (after user answers Q1)
-    fun_fact_2: Optional[str]  # Shown during second wait (after user answers Q2)
-
-    # Loop Control
-    excluded_ids: List[int]
-    excluded_artists: List[str]  # Artists user already knows
-    known_artists: List[str]  # Alias for excluded_artists (from user input)
-    next_step: Optional[str]  # For conditional edges
-
-    # Interaction Flags
+class AgentState(TypedDict):
+    # --- Input ---
+    playlist_id: str
+    user_id: str
+    
+    # --- Flow Control Flags ---
+    playlist_analyzed: bool
+    vibe_selected: bool
+    search_done: bool
+    enriched: bool
+    filtered: bool
     knowledge_checked: bool
-    vibe_checked: bool
-    vibe_choice: Optional[str]
+    knowledge_search_attempted: bool
+    results_presented: bool
+    
+    # --- Data State ---
+    playlist_profile: Dict[str, Any]  # Stats: avg_bpm, genres, etc.
+    vibe_choice: Optional[str]        # User's selected vibe (e.g., "more_energy")
+    constraints: Dict[str, Any]       # Search constraints (min_bpm, etc.)
+    
+    candidate_tracks: List[Track]     # Raw search results
+    enriched_tracks: List[Track]      # Tracks with full metadata
+    final_tracks: List[Track]         # Filtered & Knowledge-checked tracks
+    
+    known_artists: Annotated[List[str], add] # Accumulate known artists
+    excluded_artists: List[str]       # Artists to exclude from next search
+    
+    # --- UI State ---
+    ui_state: UIState
+    
+    # --- Internal ---
+    iteration_count: int
+    error: Optional[str]
