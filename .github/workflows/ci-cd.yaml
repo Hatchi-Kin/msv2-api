@@ -39,6 +39,8 @@ jobs:
           MINIO_SECRET_KEY: miniodummyadmin
           MINIO_BUCKET: dummy-bucket
           SECRET_KEY: tesdummyt-secret-key
+          ANTHROPIC_API_KEY: dummy-anthropic-key
+          GOOGLE_API_KEY: dummy-google-key
         run: uv run pytest tests/
 
   build-and-push:
