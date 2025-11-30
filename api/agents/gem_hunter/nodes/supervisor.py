@@ -110,7 +110,8 @@ class SupervisorNode:
         iteration = state.iteration_count
         search_iter = state.search_iteration
 
-        return f"""You are a music curator supervisor. Your mission: create a 5-track playlist of hidden gems.
+        return f"""You are a music curator supervisor. Your mission: 
+    create a 5-track playlist of hidden gems that matches user's taste and prioritizes tracks from artists user doesn't know.
 
 Current State:
 - Playlist analyzed: {playlist_analyzed}
@@ -127,7 +128,7 @@ Available Tools:
 1. analyze_playlist - Analyze source playlist, ask user for vibe (INTERRUPTS USER)
 2. search_tracks - Search for similar tracks with constraints
 3. evaluate_results - Assess quality/quantity of current candidates
-4. check_knowledge - Ask which artists user knows (INTERRUPTS USER)
+4. check_knowledge - Ask which artists user knows in order to prioritize unknown tracks(INTERRUPTS USER)
 5. present_results - Show final 5-track playlist (ENDS MISSION)
 
 Decision Rules:

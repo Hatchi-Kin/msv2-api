@@ -335,11 +335,14 @@ class ToolNodes:
                     },
                 }
 
-            # Generate pitches with rich audio features (PARALLELIZED for speed)
+            # Generate pitches with rich audio features (BATCHED for speed - single LLM call!)
             import asyncio
+            from pydantic import BaseModel, Field
+            from typing import List
 
-            async def generate_pitch(t):
-                """Generate pitch for a single track."""
+            # Step 1: Build context for all tracks
+            track_contexts = []
+            for t in final:
                 # Handle both dict and Pydantic model
                 if isinstance(t, dict):
                     t_id = t.get("id")
@@ -360,106 +363,159 @@ class ToolNodes:
                     t_harmonic_ratio = getattr(t, "harmonic_ratio", None)
                     t_key = getattr(t, "estimated_key", None)
 
-                try:
-                    # Build comparative context with ACTUAL NUMBERS as evidence
-                    comparisons = []
+                # Build comparative context with ACTUAL NUMBERS as evidence
+                comparisons = []
 
-                    # Compare BPM (show the numbers!)
-                    if t_bpm and profile.get("avg_bpm"):
-                        avg_bpm = profile["avg_bpm"]
-                        if abs(t_bpm - avg_bpm) < 10:
-                            comparisons.append(
-                                f"its {t_bpm:.0f} BPM perfectly matches your playlist's {avg_bpm:.0f} BPM tempo"
-                            )
-                        elif t_bpm < avg_bpm:
-                            comparisons.append(
-                                f"its slower {t_bpm:.0f} BPM (vs your {avg_bpm:.0f}) creates a more relaxed feel"
-                            )
-                        else:
-                            comparisons.append(
-                                f"its faster {t_bpm:.0f} BPM (vs your {avg_bpm:.0f}) adds subtle energy"
-                            )
+                # Compare BPM (show the numbers!)
+                if t_bpm and profile.get("avg_bpm"):
+                    avg_bpm = profile["avg_bpm"]
+                    if abs(t_bpm - avg_bpm) < 10:
+                        comparisons.append(
+                            f"its {t_bpm:.0f} BPM perfectly matches your playlist's {avg_bpm:.0f} BPM tempo"
+                        )
+                    elif t_bpm < avg_bpm:
+                        comparisons.append(
+                            f"its slower {t_bpm:.0f} BPM (vs your {avg_bpm:.0f}) creates a more relaxed feel"
+                        )
+                    else:
+                        comparisons.append(
+                            f"its faster {t_bpm:.0f} BPM (vs your {avg_bpm:.0f}) adds subtle energy"
+                        )
 
-                    # Compare Energy (show the numbers!)
-                    if t_energy is not None and profile.get("avg_energy") is not None:
-                        avg_energy = profile["avg_energy"]
-                        if abs(t_energy - avg_energy) < 0.1:
-                            comparisons.append(
-                                f"energy level of {t_energy:.2f} closely matches your {avg_energy:.2f}"
-                            )
-                        elif t_energy < avg_energy:
-                            comparisons.append(
-                                f"lower energy ({t_energy:.2f} vs {avg_energy:.2f}) maintains the intimate vibe"
-                            )
-                        else:
-                            comparisons.append(
-                                f"higher energy ({t_energy:.2f} vs {avg_energy:.2f}) adds dynamic contrast"
-                            )
+                # Compare Energy (show the numbers!)
+                if t_energy is not None and profile.get("avg_energy") is not None:
+                    avg_energy = profile["avg_energy"]
+                    if abs(t_energy - avg_energy) < 0.1:
+                        comparisons.append(
+                            f"energy level of {t_energy:.2f} closely matches your {avg_energy:.2f}"
+                        )
+                    elif t_energy < avg_energy:
+                        comparisons.append(
+                            f"lower energy ({t_energy:.2f} vs {avg_energy:.2f}) maintains the intimate vibe"
+                        )
+                    else:
+                        comparisons.append(
+                            f"higher energy ({t_energy:.2f} vs {avg_energy:.2f}) adds dynamic contrast"
+                        )
 
-                    # Compare Brightness (show the numbers!)
-                    if t_brightness and profile.get("avg_brightness"):
-                        avg_brightness = profile["avg_brightness"]
-                        if abs(t_brightness - avg_brightness) < 200:
-                            comparisons.append(
-                                f"brightness of {t_brightness:.0f} matches your {avg_brightness:.0f} tonal palette"
-                            )
-                        elif t_brightness < avg_brightness:
-                            comparisons.append(
-                                f"warmer tones ({t_brightness:.0f} vs {avg_brightness:.0f}) deepen the atmosphere"
-                            )
-                        else:
-                            comparisons.append(
-                                f"brighter tones ({t_brightness:.0f} vs {avg_brightness:.0f}) add clarity"
-                            )
+                # Compare Brightness (show the numbers!)
+                if t_brightness and profile.get("avg_brightness"):
+                    avg_brightness = profile["avg_brightness"]
+                    if abs(t_brightness - avg_brightness) < 200:
+                        comparisons.append(
+                            f"brightness of {t_brightness:.0f} matches your {avg_brightness:.0f} tonal palette"
+                        )
+                    elif t_brightness < avg_brightness:
+                        comparisons.append(
+                            f"warmer tones ({t_brightness:.0f} vs {avg_brightness:.0f}) deepen the atmosphere"
+                        )
+                    else:
+                        comparisons.append(
+                            f"brighter tones ({t_brightness:.0f} vs {avg_brightness:.0f}) add clarity"
+                        )
 
-                    # Harmonic ratio (show the numbers!)
-                    if (
-                        t_harmonic_ratio is not None
-                        and profile.get("avg_harmonic_ratio") is not None
-                    ):
-                        avg_harmonic = profile["avg_harmonic_ratio"]
-                        if abs(t_harmonic_ratio - avg_harmonic) < 0.1:
-                            comparisons.append(
-                                f"harmonic ratio of {t_harmonic_ratio:.2f} aligns with your {avg_harmonic:.2f}"
-                            )
-                        elif t_harmonic_ratio > avg_harmonic:
-                            comparisons.append(
-                                f"richer harmonics ({t_harmonic_ratio:.2f} vs {avg_harmonic:.2f}) add complexity"
-                            )
+                # Harmonic ratio (show the numbers!)
+                if (
+                    t_harmonic_ratio is not None
+                    and profile.get("avg_harmonic_ratio") is not None
+                ):
+                    avg_harmonic = profile["avg_harmonic_ratio"]
+                    if abs(t_harmonic_ratio - avg_harmonic) < 0.1:
+                        comparisons.append(
+                            f"harmonic ratio of {t_harmonic_ratio:.2f} aligns with your {avg_harmonic:.2f}"
+                        )
+                    elif t_harmonic_ratio > avg_harmonic:
+                        comparisons.append(
+                            f"richer harmonics ({t_harmonic_ratio:.2f} vs {avg_harmonic:.2f}) add complexity"
+                        )
 
-                    # Key (always show if available)
-                    if t_key:
-                        comparisons.append(f"composed in {t_key}")
+                # Key (always show if available)
+                if t_key:
+                    comparisons.append(f"composed in {t_key}")
 
-                    context = (
-                        "; ".join(comparisons)
-                        if comparisons
-                        else "unique sonic qualities"
+                context = (
+                    "; ".join(comparisons) if comparisons else "unique sonic qualities"
+                )
+
+                track_contexts.append(
+                    {
+                        "id": t_id,
+                        "title": t_title,
+                        "artist": t_artist,
+                        "evidence": context,
+                    }
+                )
+
+            # Step 2: Define structured output for batched pitch generation
+            class TrackPitch(BaseModel):
+                """Single track pitch."""
+
+                track_index: int = Field(description="Index of the track (0-4)")
+                reason: str = Field(
+                    description="One compelling sentence explaining why this track is a hidden gem"
+                )
+
+            class BatchPitches(BaseModel):
+                """All track pitches in one response."""
+
+                pitches: List[TrackPitch] = Field(
+                    description="List of pitches, one per track"
+                )
+
+            # Step 3: Create batched prompt
+            tracks_text = "\n\n".join(
+                [
+                    f"Track {i}: '{tc['title']}' by {tc['artist']}\nEvidence: {tc['evidence']}"
+                    for i, tc in enumerate(track_contexts)
+                ]
+            )
+
+            batch_prompt = f"""You are a music curator. Write a compelling 1-sentence pitch for EACH of the following tracks.
+For each track, use the provided EVIDENCE to justify the recommendation. Be specific about WHY the metrics make it a good match.
+
+{tracks_text}
+
+Provide exactly {len(track_contexts)} pitches, one for each track."""
+
+            # Step 4: Generate all pitches in ONE LLM call
+            try:
+                batch_result = await self.creative_llm.with_structured_output(
+                    BatchPitches
+                ).ainvoke(batch_prompt)
+
+                # Map pitches back to tracks
+                cards = []
+                for i, tc in enumerate(track_contexts):
+                    # Find matching pitch by index
+                    pitch = next(
+                        (p for p in batch_result.pitches if p.track_index == i), None
+                    )
+                    reason = (
+                        pitch.reason
+                        if pitch
+                        else "A great track that complements your playlist's vibe!"
                     )
 
-                    prompt = ChatPromptTemplate.from_template(
-                        "Write 1 compelling sentence explaining why '{title}' by {artist} is a hidden gem for this playlist.\n"
-                        "Evidence: {context}.\n"
-                        "Use this evidence to justify the recommendation. Be specific about WHY these metrics make it a good match."
+                    cards.append(
+                        {
+                            "id": tc["id"],
+                            "title": tc["title"],
+                            "artist": tc["artist"],
+                            "reason": reason,
+                        }
                     )
-                    chain = prompt | self.creative_llm
-                    pitch = await chain.ainvoke(
-                        {"title": t_title, "artist": t_artist, "context": context}
-                    )
-                    reason = pitch.content.strip()
-                except Exception as e:
-                    logger.error(f"❌ Failed to generate pitch for {t_title}: {e}")
-                    reason = "A great track that complements your playlist's vibe!"
-
-                return {
-                    "id": t_id,
-                    "title": t_title,
-                    "artist": t_artist,
-                    "reason": reason,
-                }
-
-            # Generate all pitches in parallel
-            cards = await asyncio.gather(*[generate_pitch(t) for t in final])
+            except Exception as e:
+                logger.error(f"❌ Batch pitch generation failed: {e}", exc_info=True)
+                # Fallback to simple reasons
+                cards = [
+                    {
+                        "id": tc["id"],
+                        "title": tc["title"],
+                        "artist": tc["artist"],
+                        "reason": "A great track that complements your playlist's vibe!",
+                    }
+                    for tc in track_contexts
+                ]
 
             # Generate two-part justification (Understanding + Selection)
             try:
