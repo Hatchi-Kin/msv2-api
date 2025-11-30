@@ -20,81 +20,93 @@ uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 
-# Hidden Gem Hunter Agent Analysis
+# Music Curator Agent v3
 
 ## Architecture Overview
 
-The **Hidden Gem Hunter** is a LangGraph-based agent designed to find "hidden gems" (tracks similar to a user's playlist but from artists they likely don't know) in a music library.
+The **Music Curator Agent** is a truly agentic LangGraph system that autonomously curates personalized playlists. It uses an LLM-powered supervisor to make intelligent decisions about search strategy, quality evaluation, and when to present results.
 
-It operates in three distinct phases, modeled as graph nodes:
+### Key Features
 
-1.  **Discovery (The Math)**: Vector-based retrieval.
-2.  **Analysis (The Logic)**: Filtering, knowledge checking, and metadata enrichment.
-3.  **Presentation (The Creative)**: Vibe selection, pitch generation, and final justification.
+- **Autonomous Decision Making**: Supervisor uses LLM to reason about next steps
+- **Adaptive Search Strategy**: Automatically adjusts constraints based on results
+- **Loop Prevention**: Detects and breaks out of infinite loops
+- **Minimal User Interruption**: Only 2 questions maximum (vibe + artist knowledge)
+- **Graceful Failure Handling**: Handles errors and edge cases intelligently
 
 ### Agent Flow
 
 ```mermaid
 graph TD
-    Start([Start]) --> Discovery
+    Start([Start]) --> Supervisor
     
-    subgraph "Phase 1: Discovery"
-        Discovery[Discovery Node<br/>(Vector Search)]
-    end
+    Supervisor{Supervisor<br/>Decision}
     
-    Discovery --> CheckDiscovery{Found<br/>Candidates?}
-    CheckDiscovery -- No --> End([End])
-    CheckDiscovery -- Yes --> Analysis
+    Supervisor -->|analyze_playlist| Analyze[Analyze Playlist<br/>INTERRUPT: Vibe Selection]
+    Supervisor -->|search_tracks| Search[Search Tracks<br/>Vector Search]
+    Supervisor -->|evaluate_results| Evaluate[Evaluate Results<br/>Quality Assessment]
+    Supervisor -->|check_knowledge| Knowledge[Check Knowledge<br/>INTERRUPT: Artist Selection]
+    Supervisor -->|present_results| Present[Present Results<br/>Final Curation]
     
-    subgraph "Phase 2: Analysis"
-        Analysis[Analysis Node<br/>(Filter & Enrich)]
-        Analysis --> CheckAnalysis{Next Step?}
-        
-        CheckAnalysis -- "Knowledge Check<br/>(User Input)" --> End
-        CheckAnalysis -- "Not Enough<br/>Candidates" --> Discovery
-        CheckAnalysis -- "Ready" --> Presentation
-    end
+    Analyze --> Supervisor
+    Search --> Supervisor
+    Evaluate --> Supervisor
+    Knowledge --> Supervisor
+    Present --> End([End])
     
-    subgraph "Phase 3: Presentation"
-        Presentation[Presentation Node<br/>(Vibe & Pitch)]
-        Presentation --> CheckPresentation{Next Step?}
-        
-        CheckPresentation -- "Vibe Check<br/>(User Input)" --> End
-        CheckPresentation -- "Final Result" --> End
-    end
-    
-    style Discovery fill:#e1f5fe,stroke:#01579b
-    style Analysis fill:#fff3e0,stroke:#e65100
-    style Presentation fill:#f3e5f5,stroke:#4a148c
+    style Supervisor fill:#fff3e0,stroke:#e65100
+    style Analyze fill:#e1f5fe,stroke:#01579b
+    style Search fill:#e1f5fe,stroke:#01579b
+    style Evaluate fill:#e1f5fe,stroke:#01579b
+    style Knowledge fill:#e1f5fe,stroke:#01579b
+    style Present fill:#f3e5f5,stroke:#4a148c
 ```
 
 ## Detailed Component Logic
 
-### 1. Discovery Node (`discovery_node.py`)
--   **Input**: `playlist_id`
+### Supervisor Node (`supervisor_v3.py`)
+-   **Input**: Current `AgentState`
 -   **Action**:
-    -   Calculates the **Centroid** (average vector) of the user's playlist.
-    -   Performs a **Vector Search** to find tracks closest to this centroid.
-    -   **Excludes** tracks already in the playlist.
--   **Output**: List of `candidate_tracks` (raw DB records).
+    -   Analyzes state (flags, data, history)
+    -   Builds context prompt with decision rules
+    -   Calls LLM with structured output
+    -   Decides next action based on state
+    -   Prevents loops (detects same action 3x)
+    -   Enforces max 10 iterations
+-   **Output**: `next_action`, `reasoning`, `parameters`
 
-### 2. Analysis Node (`analysis_node.py`)
--   **Input**: `candidate_tracks`
--   **Action**:
-    -   **Knowledge Check**: Identifies unique artists and asks the user: *"Do you know these?"* (Uses LLM to analyze playlist vibe first).
-    -   **Filtering**: Removes tracks by artists the user explicitly knows.
-    -   **Loop Back**: If filtering leaves < 3 candidates, it loops back to **Discovery** to fetch more, adding current candidates to an exclusion list.
-    -   **Enrichment**: Fetches metadata (genres, audio features) from Spotify in parallel.
--   **Output**: `enriched_tracks` or a loop command.
+### Tool Nodes (`tools_v3.py`)
 
-### 3. Presentation Node (`presentation_node.py`)
--   **Input**: `enriched_tracks`
--   **Action**:
-    -   **Vibe Check**: Asks the user to refine the selection (e.g., "Chill", "Energy", "Surprise").
-    -   **Filtering**: Filters the enriched list based on the selected vibe.
-    -   **Creative Generation**:
-        -   **Pitches**: LLM writes a persuasive "pitch" for each track.
-        -   **Justification**: LLM explains *why* these tracks fit the playlist and vibe.
--   **Output**: Final `UIState` with track cards.
+#### 1. analyze_playlist
+-   Fetches playlist statistics (BPM, energy, genres)
+-   Validates playlist has at least 5 tracks
+-   Generates description with LLM
+-   Creates 4 vibe options
+-   **INTERRUPTS** for user vibe selection
+
+#### 2. search_tracks
+-   Calculates playlist centroid (average vector)
+-   Applies vibe-based constraints
+-   Adaptive: Relaxes constraints on retry
+-   Performs vector search
+-   Excludes known artists
+
+#### 3. evaluate_results
+-   Calculates quantity score (candidates / 50)
+-   Calculates quality score (1 - avg_distance)
+-   Calculates diversity score (unique_artists / 20)
+-   Returns overall assessment
+
+#### 4. check_knowledge
+-   Extracts unique artists from top 20 candidates
+-   Creates options with "None" and "All"
+-   **INTERRUPTS** for user artist selection
+
+#### 5. present_results
+-   Filters by known artists
+-   Selects top 5 tracks (prioritizes unknown)
+-   Generates LLM pitch for each track
+-   Generates overall justification
+-   Returns final UI state
 
 ---

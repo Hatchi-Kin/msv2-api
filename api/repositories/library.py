@@ -296,6 +296,8 @@ class LibraryRepository:
         """
         Search for tracks similar to the centroid, applying filters.
         """
+        from api.core.db_codecs import decode_vector
+        
         # Ensure centroid is a string for pgvector
         centroid_str = str(centroid).replace(" ", "")
         
@@ -327,5 +329,13 @@ class LibraryRepository:
             limit
         )
         
-        return [Track(**dict(row)) for row in rows]
+        # Decode embeddings explicitly
+        tracks = []
+        for row in rows:
+            track_dict = dict(row)
+            if 'embedding_512_vector' in track_dict:
+                track_dict['embedding_512_vector'] = decode_vector(track_dict['embedding_512_vector'])
+            tracks.append(Track(**track_dict))
+        
+        return tracks
 
