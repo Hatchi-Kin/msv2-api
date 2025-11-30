@@ -281,3 +281,58 @@ class LibraryRepository:
         """
         await self.db.execute(query, *values)
         return True
+
+    async def search_hidden_gems_with_filters(
+        self,
+        centroid: list[float],
+        exclude_ids: list[int],
+        exclude_artists: list[str],
+        min_bpm: float = 0,
+        max_bpm: float = 999,
+        min_energy: float = 0,
+        max_energy: float = 1.0,
+        limit: int = 10,
+    ) -> list[Track]:
+        """
+        Search for tracks similar to the centroid, applying filters.
+        """
+
+        # Convert empty lists to None for cleaner SQL handling, or rely on explicit casting
+        # asyncpg needs explicit casting for arrays
+
+        query = f"""
+            SELECT *, 
+                   1 - (embedding_512_vector <=> $1) as similarity
+            FROM {self.table}
+            WHERE 
+                bpm >= $4 AND bpm <= $5
+                AND energy >= $6 AND energy <= $7
+                AND (cardinality($2::int[]) = 0 OR id != ALL($2::int[]))
+                AND (cardinality($3::text[]) = 0 OR artist != ALL($3::text[]))
+            ORDER BY embedding_512_vector <=> $1
+            LIMIT $8;
+        """
+
+        rows = await self.db.fetch(
+            query,
+            centroid,
+            exclude_ids or [],
+            exclude_artists or [],
+            min_bpm,
+            max_bpm,
+            min_energy,
+            max_energy,
+            limit,
+        )
+
+        # Decode embeddings explicitly
+        tracks = []
+        for row in rows:
+            track_dict = dict(row)
+            if "embedding_512_vector" in track_dict:
+                track_dict["embedding_512_vector"] = decode_vector(
+                    track_dict["embedding_512_vector"]
+                )
+            tracks.append(Track(**track_dict))
+
+        return tracks

@@ -198,3 +198,50 @@ class PlaylistsRepository:
 
         logger.info(f"Removed track {track_id} from playlist {playlist_id}")
         return True
+
+    async def get_playlist_centroid(self, playlist_id: int) -> Optional[list[float]]:
+        """Calculate the average embedding vector for a playlist."""
+        query = f"""
+            SELECT AVG(m.embedding_512_vector)
+            FROM {self.playlist_tracks_table} pt
+            JOIN {self.music_table} m ON pt.track_id = m.id
+            WHERE pt.playlist_id = $1;
+        """
+        return await self.db.fetchval(query, playlist_id)
+
+    async def get_playlist_stats(self, playlist_id: int) -> dict:
+        """Get stats for a playlist (avg bpm, energy, top genres)."""
+        from api.core.logger import logger
+
+        logger.info(f"🔍 Getting stats for playlist {playlist_id}")
+
+        query = f"""
+            SELECT 
+                AVG(m.bpm) as avg_bpm,
+                AVG(m.energy) as avg_energy,
+                AVG(m.brightness) as avg_brightness,
+                AVG(m.harmonic_ratio) as avg_harmonic_ratio,
+                COUNT(*) as track_count
+            FROM {self.playlist_tracks_table} pt
+            JOIN {self.music_table} m ON pt.track_id = m.id
+            WHERE pt.playlist_id = $1;
+        """
+        stats = await self.db.fetchrow(query, playlist_id)
+        logger.info(f"📊 Raw stats from DB: {dict(stats) if stats else None}")
+
+        # Get top genres separately
+        genre_query = f"""
+            SELECT m.genre, COUNT(*) as count
+            FROM {self.playlist_tracks_table} pt
+            JOIN {self.music_table} m ON pt.track_id = m.id
+            WHERE pt.playlist_id = $1 AND m.genre IS NOT NULL
+            GROUP BY m.genre
+            ORDER BY count DESC
+            LIMIT 3;
+        """
+        genres = await self.db.fetch(genre_query, playlist_id)
+
+        result = dict(stats) if stats else {}
+        result["top_genres"] = [g["genre"] for g in genres]
+        logger.info(f"✅ Final stats: {result}")
+        return result

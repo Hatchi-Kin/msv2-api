@@ -1,6 +1,7 @@
 import pytest
-from httpx import AsyncClient
 from unittest.mock import MagicMock
+
+from httpx import AsyncClient
 
 
 # Basic validation test

@@ -24,6 +24,15 @@ class Track(BaseModel):
     created_at: datetime
     embedding_512_vector: Optional[List[float]] = None
 
+    # Audio Features
+    bpm: Optional[float] = None
+    energy: Optional[float] = None
+    danceability: Optional[float] = None
+    valence: Optional[float] = None
+    key: Optional[int] = None
+    brightness: Optional[float] = None
+    harmonic_ratio: Optional[float] = None
+
 
 class ArtistList(BaseModel):
     artists: List[str]

@@ -1,89 +1,62 @@
-from typing import TypedDict, Annotated, List, Optional, Dict, Any
+"""State definitions for Music Curator Agent v3 (Supervisor Pattern)."""
 
-from langgraph.graph.message import add_messages
-from pydantic import BaseModel
+from typing import List, Optional, Dict, Any, Union
+
+from pydantic import BaseModel, Field
 
 
-class TrackCard(BaseModel):
-    """Full track object with agent's pitch/reason.
+class Track(BaseModel):
+    """Track with all metadata."""
 
-    Includes all MegasetTrack fields so the frontend can use
-    the same card components and player functionality.
-    """
-
-    # Core identification
-    id: int
-    filename: str
-    filepath: str
-    relative_path: str
-
-    # Metadata
-    album_folder: Optional[str] = None
-    artist_folder: Optional[str] = None
-    filesize: Optional[int] = None
-    title: Optional[str] = None
-    artist: Optional[str] = None
+    id: str
+    title: str
+    artist: str
     album: Optional[str] = None
-    year: Optional[int] = None
-    tracknumber: Optional[int] = None
-    genre: Optional[str] = None
-    top_5_genres: Optional[str] = None
-    created_at: Optional[str] = None
-
-    # Agent-specific field
-    reason: str  # The "Pitch" - why this track is recommended
-
-    # Audio Features (for "Why" metrics)
+    uri: str
+    distance: float  # Similarity score from vector search
     bpm: Optional[float] = None
     energy: Optional[float] = None
-    valence: Optional[float] = None
     danceability: Optional[float] = None
-    spotify_id: Optional[str] = None
+    valence: Optional[float] = None
+    genres: List[str] = Field(default_factory=list)
+    reason: Optional[str] = None  # LLM-generated pitch (added in present_results)
 
 
-class ButtonOption(BaseModel):
-    id: str  # e.g., "add_track_123"
-    label: str
-    action: str  # "add", "search_more", "reject"
-    payload: Dict[str, Any]
+class AgentState(BaseModel):
+    """Complete agent state for supervisor pattern."""
 
+    # --- Input ---
+    playlist_id: str
+    user_id: str
 
-class UIState(BaseModel):
-    message: str
-    understanding: Optional[str] = None
-    selection: Optional[str] = None
-    cards: List[TrackCard] = []
-    options: List[ButtonOption] = []
-    fun_fact: Optional[str] = None  # Fact to display during the *next* loading screen
+    # --- Flow Control Flags ---
+    playlist_analyzed: bool = False
+    vibe_choice: Optional[str] = None  # "similar" | "chill" | "energy" | "surprise"
+    search_iteration: int = 0
+    knowledge_checked: bool = False
+    results_presented: bool = False
 
+    # --- Data State ---
+    playlist_profile: Optional[Dict[str, Any]] = (
+        None  # {avg_bpm, avg_energy, top_genres, description}
+    )
+    candidate_tracks: List[Union[Track, Dict[str, Any]]] = Field(default_factory=list)
+    quality_assessment: Optional[Dict[str, Any]] = (
+        None  # {sufficient, quality_score, recommendation}
+    )
+    known_artists: List[str] = Field(default_factory=list)
 
-class AgentState(TypedDict, total=False):
-    # Standard LangGraph message history (for chat context if needed)
-    messages: Annotated[List[dict], add_messages]
+    # --- Supervisor Control ---
+    next_action: str = ""  # Tool name or "END"
+    supervisor_reasoning: str = ""
+    tool_parameters: Dict[str, Any] = Field(default_factory=dict)
+    action_history: List[str] = Field(
+        default_factory=list
+    )  # Last 3 actions for loop detection
+    iteration_count: int = 0
 
-    # Context
-    playlist_id: int
-    user_preferences: str
+    # --- UI State ---
+    ui_state: Optional[Dict[str, Any]] = None  # {message, options, cards}
 
-    # Working Memory
-    centroid: Optional[List[float]]
-    candidate_tracks: List[dict]  # Raw track dicts from DB
-    enriched_tracks: List[dict]  # Tracks with Spotify data
-
-    # Output State (what the UI renders)
-    ui_state: Optional[dict]  # Changed from UIState to dict for serialization
-
-    # Fun facts to display during loading
-    fun_fact_1: Optional[str]  # Shown during first wait (after user answers Q1)
-    fun_fact_2: Optional[str]  # Shown during second wait (after user answers Q2)
-
-    # Loop Control
-    excluded_ids: List[int]
-    excluded_artists: List[str]  # Artists user already knows
-    known_artists: List[str]  # Alias for excluded_artists (from user input)
-    next_step: Optional[str]  # For conditional edges
-
-    # Interaction Flags
-    knowledge_checked: bool
-    vibe_checked: bool
-    vibe_choice: Optional[str]
+    # --- Error Handling ---
+    error: Optional[str] = None
