@@ -39,18 +39,34 @@ class ToolNodes:
                     }
                 }
             
-            # Generate description
-            prompt = ChatPromptTemplate.from_template(
-                "Describe this playlist vibe in 1-2 sentences: BPM {bpm}, Energy {energy}, Genres: {genres}"
-            )
-            chain = prompt | self.creative_llm
-            desc = await chain.ainvoke({
-                "bpm": stats.get("avg_bpm", 0),
-                "energy": stats.get("avg_energy", 0),
-                "genres": ", ".join(stats.get("top_genres", []))
-            })
+            # Generate description (rule-based for speed)
+            bpm = stats.get("avg_bpm", 120)
+            energy = stats.get("avg_energy", 0.5)
+            genres = stats.get("top_genres", [])
             
-            stats["description"] = desc.content.strip()
+            # Tempo description
+            if bpm < 90:
+                tempo_desc = "slow, contemplative"
+            elif bpm < 120:
+                tempo_desc = "moderate, relaxed"
+            elif bpm < 140:
+                tempo_desc = "upbeat, energetic"
+            else:
+                tempo_desc = "fast-paced, driving"
+            
+            # Energy description
+            if energy < 0.3:
+                energy_desc = "mellow and intimate"
+            elif energy < 0.6:
+                energy_desc = "balanced and dynamic"
+            else:
+                energy_desc = "intense and powerful"
+            
+            # Genre description
+            genre_desc = f"{', '.join(genres[:2])}" if genres else "eclectic"
+            
+            desc = f"This playlist has a {tempo_desc} tempo with {energy_desc} vibes, featuring {genre_desc} influences."
+            stats["description"] = desc
             
             # Create options
             options = [
@@ -277,9 +293,11 @@ class ToolNodes:
                     }
                 }
             
-            # Generate pitches with rich audio features
-            cards = []
-            for t in final:
+            # Generate pitches with rich audio features (PARALLELIZED for speed)
+            import asyncio
+            
+            async def generate_pitch(t):
+                """Generate pitch for a single track."""
                 t_id = t.get("id") if isinstance(t, dict) else t.id
                 t_title = t.get("title") if isinstance(t, dict) else t.title
                 t_artist = t.get("artist") if isinstance(t, dict) else t.artist
@@ -288,7 +306,6 @@ class ToolNodes:
                 t_brightness = t.get("brightness") if isinstance(t, dict) else getattr(t, "brightness", None)
                 t_harmonic_ratio = t.get("harmonic_ratio") if isinstance(t, dict) else getattr(t, "harmonic_ratio", None)
                 t_key = t.get("estimated_key") if isinstance(t, dict) else getattr(t, "estimated_key", None)
-                t_dynamic_range = t.get("dynamic_range") if isinstance(t, dict) else getattr(t, "dynamic_range", None)
                 
                 try:
                     # Build comparative context with ACTUAL NUMBERS as evidence
@@ -354,12 +371,15 @@ class ToolNodes:
                     logger.error(f"❌ Failed to generate pitch for {t_title}: {e}")
                     reason = f"A great track that complements your playlist's vibe!"
                 
-                cards.append({
+                return {
                     "id": t_id,
                     "title": t_title,
                     "artist": t_artist,
                     "reason": reason
-                })
+                }
+            
+            # Generate all pitches in parallel
+            cards = await asyncio.gather(*[generate_pitch(t) for t in final])
             
             # Generate two-part justification (Understanding + Selection)
             try:
@@ -407,17 +427,14 @@ class ToolNodes:
                 # Build track list for context
                 track_list = "\n".join([f"- {c['title']} by {c['artist']}" for c in cards])
                 
-                # Part 1: Understanding (what the playlist is about)
+                # Generate Understanding and Selection in parallel
                 understanding_prompt = ChatPromptTemplate.from_template(
                     "You are analyzing a music playlist with these characteristics: {profile}.\n\n"
                     "Describe what makes this playlist special in 2 sentences. Focus on the VIBE and MOOD. "
                     "Be conversational and warm. Don't mention specific numbers."
                 )
                 understanding_chain = understanding_prompt | self.creative_llm
-                understanding_result = await understanding_chain.ainvoke({"profile": profile_str})
-                understanding_text = understanding_result.content.strip()
                 
-                # Part 2: Selection (why these specific tracks)
                 selection_prompt = ChatPromptTemplate.from_template(
                     "You are a music curator. You selected these {count} tracks as hidden gems:\n\n{tracks}\n\n"
                     "The original playlist has: {profile}.\n\n"
@@ -426,11 +443,18 @@ class ToolNodes:
                     "Write as if you're explaining your curation choices to the user."
                 )
                 selection_chain = selection_prompt | self.reasoning_llm
-                selection_result = await selection_chain.ainvoke({
-                    "count": len(cards),
-                    "tracks": track_list,
-                    "profile": profile_str
-                })
+                
+                # Run both in parallel
+                understanding_result, selection_result = await asyncio.gather(
+                    understanding_chain.ainvoke({"profile": profile_str}),
+                    selection_chain.ainvoke({
+                        "count": len(cards),
+                        "tracks": track_list,
+                        "profile": profile_str
+                    })
+                )
+                
+                understanding_text = understanding_result.content.strip()
                 selection_text = selection_result.content.strip()
                 
                 # Add note if user knew all artists
