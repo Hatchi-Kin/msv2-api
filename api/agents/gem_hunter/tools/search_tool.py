@@ -21,7 +21,7 @@ async def search_similar_tracks(
     constraints: Dict[str, Any],
     exclude_ids: List[int],
     exclude_artists: List[str],
-    limit: int = 50,
+    limit: int = 30,
 ) -> List[Track]:
     """Find similar tracks using vector search."""
     playlist_repo = PlaylistsRepository(pool)

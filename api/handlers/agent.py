@@ -49,7 +49,8 @@ async def start_recommendation_handler(
     try:
         logger.info(f"🚀 Starting agent for playlist {playlist_id}")
         final_state = await app.ainvoke(initial_state, config=config)
-        return final_state.get("ui_state")
+        # Return the full state wrapped in an object with ui_state
+        return {"ui_state": final_state.get("ui_state")}
     except LLMFailureError as e:
         logger.error(f"❌ LLM service unavailable: {e}")
         return {
@@ -129,8 +130,8 @@ async def resume_agent_handler(
     logger.info("🚀 Resuming graph execution...")
     try:
         final_state = await app.ainvoke(None, config=config)
-        ui_state = final_state.get("ui_state")
-        return ui_state
+        # Return the full state wrapped in an object with ui_state
+        return {"ui_state": final_state.get("ui_state")}
     except LLMFailureError as e:
         logger.error(f"❌ LLM service unavailable: {e}")
         return {
