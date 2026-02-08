@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from secrets import token_urlsafe
 from uuid import uuid4
 
 from fastapi import Request, Response
@@ -77,6 +78,59 @@ async def login_handler(
         max_age=int(refresh_token_expires.total_seconds()),
     )
     return Token(access_token=access_token, token_type="bearer")
+
+
+async def guest_login_handler(
+    auth_repo: AuthRepository,
+    response: Response,
+) -> Token:
+    # 1. Create a random guest user
+    # generated email: guest_<random_string>@demo.msv2
+    # generated password: <random_16_char_string>
+    random_suffix = uuid4().hex[:8]
+    guest_email = f"guest_{random_suffix}@demo.msv2"
+    guest_password = token_urlsafe(16)
+    
+    hashed_password = get_password_hash(guest_password)
+    
+    # Create the user in DB
+    user = await auth_repo.create_user(
+        email=guest_email,
+        username=f"Guest {random_suffix}",
+        hashed_password=hashed_password,
+    )
+    logger.info(f"Created guest user: {guest_email}")
+
+    # 2. Perform Login (Generation of Tokens)
+    # This logic mimics login_handler exactly
+    if not user.is_active:
+        raise InactiveUserException()  # Should not happen for new users, but safety first
+
+    jti_uuid = str(uuid4())
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email, "jti": jti_uuid}, expires_delta=access_token_expires
+    )
+    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token = create_refresh_token(
+        data={"sub": user.email, "jti": jti_uuid}, expires_delta=refresh_token_expires
+    )
+
+    await auth_repo.update_user_jti(
+        user.id, jti_uuid, datetime.now(timezone.utc) + refresh_token_expires
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        expires=int(refresh_token_expires.total_seconds()),
+        max_age=int(refresh_token_expires.total_seconds()),
+    )
+    return Token(access_token=access_token, token_type="bearer")
+
 
 
 async def refresh_token_handler(

@@ -14,10 +14,10 @@ async def startup_database_pool(app: FastAPI):
     pool = await asyncpg.create_pool(
         settings.DATABASE_URL,
         init=register_vector_codec,
-        min_size=5,  # Minimum connections to maintain
-        max_size=20,  # Maximum connections allowed
-        command_timeout=30,  # Query timeout in seconds
-        timeout=5,  # Connection acquisition timeout in seconds
+        min_size=1,  # Reduced for local dev stability
+        max_size=20,
+        command_timeout=60,  # Increased for slow queries
+        timeout=10,  # Increased connection timeout
     )
     if pool is None:
         raise Exception("Could not connect to the database")

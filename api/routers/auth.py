@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from api.core.dependencies import AuthRepo, CurrentUser
 from api.handlers.auth import (
     login_handler,
+    guest_login_handler,
     logout_handler,
     refresh_token_handler,
     register_user_handler,
@@ -29,6 +30,14 @@ async def login_endpoint(
     form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     return await login_handler(form_data, auth_repo, response)
+
+
+@auth_router.post("/guest", response_model=Token)
+async def guest_login_endpoint(
+    auth_repo: AuthRepo,
+    response: Response,
+):
+    return await guest_login_handler(auth_repo, response)
 
 
 @auth_router.post("/refresh", response_model=Token)

@@ -12,6 +12,11 @@ and
 kubectl port-forward -n glasgow-prod svc/minio-service 9000:9000
 ```
 
+and
+```sh
+kubectl port-forward -n glasgow-prod svc/rustfs-service 9002:9000
+```
+
 # or maybe just port forward the prod api directly
 
 ```sh
