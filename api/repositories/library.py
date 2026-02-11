@@ -347,3 +347,32 @@ class LibraryRepository:
             tracks.append(Track(**track_dict))
 
         return tracks
+
+    async def search_semantic_by_vector(
+        self, vector: list[float], limit: int = 40
+    ) -> list[tuple[Track, float]]:
+        """
+        Perform semantic search using CLAP embeddings.
+        Returns a pool of candidates sorted by similarity.
+        """
+        query = f"""
+            SELECT 
+                m.id, m.filename, m.filepath, m.relative_path, m.album_folder, 
+                m.artist_folder, m.filesize, m.title, m.artist, m.album, 
+                m.year, m.tracknumber, m.genre, m.top_5_genres, m.created_at,
+                (c.embedding <=> $1) as distance
+            FROM clap_embeddings c
+            JOIN {self.table} m ON c.track_id = m.id
+            ORDER BY c.embedding <=> $1
+            LIMIT $2;
+        """
+
+        rows = await self.db.fetch(query, vector, limit)
+        results = []
+        for row in rows:
+            row_dict = dict(row)
+            distance = row_dict.pop("distance")
+            track = Track(**row_dict)
+            results.append((track, float(distance)))
+
+        return results

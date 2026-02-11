@@ -10,3 +10,11 @@ class EmbeddingRequest(BaseModel):
 class EmbeddingResponse(BaseModel):
     embedding: List[float]
     shape: List[int]
+
+
+class TextEmbeddingRequest(BaseModel):
+    text: str
+
+
+class TextEmbeddingResponse(BaseModel):
+    embedding: List[float]

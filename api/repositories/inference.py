@@ -2,7 +2,12 @@ import httpx
 
 from api.core.config import settings
 from api.core.logger import logger
-from api.models.inference import EmbeddingRequest, EmbeddingResponse
+from api.models.inference import (
+    EmbeddingRequest,
+    EmbeddingResponse,
+    TextEmbeddingRequest,
+    TextEmbeddingResponse,
+)
 
 
 class InferenceRepository:
@@ -25,6 +30,14 @@ class InferenceRepository:
     @property
     def test(self):
         return f"{self.base_url.rstrip('/')}/test"
+
+    @property
+    def clap_endpoint(self) -> str:
+        """Get CLAP inference endpoint URL."""
+        url = settings.CLAP_INFERENCE_URL or self.base_url
+        if not url:
+            raise RuntimeError("CLAP_INFERENCE_URL is not configured.")
+        return f"{url.rstrip('/')}/embed"
 
     async def get_embeddings(self, audio_minio_path: str) -> EmbeddingResponse:
         """
@@ -70,3 +83,16 @@ class InferenceRepository:
                 "content": response.text,
                 "inference_url": self.test,
             }
+
+    async def get_text_embedding(self, text: str) -> TextEmbeddingResponse:
+        """Call CLAP inference service to get embedding for text."""
+        payload = TextEmbeddingRequest(text=text)
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                self.clap_endpoint,
+                content=payload.model_dump_json(),
+                headers={"Content-Type": "application/json"},
+            )
+            response.raise_for_status()
+            return TextEmbeddingResponse(**response.json())

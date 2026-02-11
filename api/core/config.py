@@ -26,6 +26,7 @@ class DatabaseSettings(BaseSettings):
 
     # msv2-inference api url
     MSV2_INFERENCE_URL: Optional[str] = None
+    CLAP_INFERENCE_URL: Optional[str] = None
 
     # For local .env file or explicit setting
     DATABASE_URL: Optional[str] = None

@@ -90,9 +90,9 @@ async def guest_login_handler(
     random_suffix = uuid4().hex[:8]
     guest_email = f"guest_{random_suffix}@demo.msv2"
     guest_password = token_urlsafe(16)
-    
+
     hashed_password = get_password_hash(guest_password)
-    
+
     # Create the user in DB
     user = await auth_repo.create_user(
         email=guest_email,
@@ -130,7 +130,6 @@ async def guest_login_handler(
         max_age=int(refresh_token_expires.total_seconds()),
     )
     return Token(access_token=access_token, token_type="bearer")
-
 
 
 async def refresh_token_handler(
