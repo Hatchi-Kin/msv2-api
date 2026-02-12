@@ -16,6 +16,7 @@ from api.models.requests import (
 )
 from api.repositories.auth import AuthRepository
 from api.repositories.coordinates import CoordinatesRepository
+from api.repositories.discovery import DiscoveryRepository
 from api.repositories.favorites import FavoritesRepository
 from api.repositories.inference import InferenceRepository
 from api.repositories.library import LibraryRepository
@@ -62,6 +63,12 @@ def get_coordinates_repository(
     return CoordinatesRepository(pool)
 
 
+def get_discovery_repository(
+    pool: asyncpg.Pool = Depends(get_db_pool),
+) -> DiscoveryRepository:
+    return DiscoveryRepository(pool)
+
+
 def get_media_repository(
     minio_client: Minio = Depends(get_minio_client),
 ) -> MediaRepository:
@@ -90,6 +97,7 @@ FavoritesRepo = Annotated[FavoritesRepository, Depends(get_favorites_repository)
 PlaylistsRepo = Annotated[PlaylistsRepository, Depends(get_playlists_repository)]
 CoordinatesRepo = Annotated[CoordinatesRepository, Depends(get_coordinates_repository)]
 MediaRepo = Annotated[MediaRepository, Depends(get_media_repository)]
+DiscoveryRepo = Annotated[DiscoveryRepository, Depends(get_discovery_repository)]
 InferenceRepo = Annotated[InferenceRepository, Depends(get_inference_repository)]
 
 # Clients

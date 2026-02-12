@@ -5,7 +5,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
-
     # PostgreSQL settings
     AUTH_TABLE: str = "users"
     MUSIC_TABLE: str = "megaset"

@@ -118,10 +118,10 @@ Current State:
 - Vibe selected: {vibe or "Not yet"}
 - Search iteration: {search_iter}
 - Candidates found: {len(candidates)}
-- Quality score: {quality.get('quality_score', 'Not evaluated')}
-- Quality sufficient: {quality.get('sufficient', 'Not evaluated')}
+- Quality score: {quality.get("quality_score", "Not evaluated")}
+- Quality sufficient: {quality.get("sufficient", "Not evaluated")}
 - Knowledge checked: {knowledge_checked}
-- Known artists: {len(known_artists)} ({', '.join(known_artists[:3])}{'...' if len(known_artists) > 3 else ''})
+- Known artists: {len(known_artists)} ({", ".join(known_artists[:3])}{"..." if len(known_artists) > 3 else ""})
 - Iteration: {iteration}/10
 
 Available Tools:

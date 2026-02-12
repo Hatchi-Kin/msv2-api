@@ -28,3 +28,13 @@ class DiscoveryResponse(BaseModel):
 
     results: ScoredTrackList
     query_vector: List[float]
+
+
+class DiscoveryRefineRequest(BaseModel):
+    """Request for refining discovery results using latent space manipulation."""
+
+    base_vector: List[float]
+    digital_organic: float = 0.0  # -1.0 (Organic) to 1.0 (Digital)
+    energy: float = 0.0  # -1.0 (Ambient) to 1.0 (Energy)
+    urban: float = 0.0  # -1.0 to 1.0 (Hip-Hop Boost)
+    bass: float = 0.0  # -1.0 to 1.0 (Reggae Boost)
