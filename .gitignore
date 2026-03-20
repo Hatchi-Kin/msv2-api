@@ -1,18 +1,28 @@
-.venv/
+# Python-generated files
 __pycache__/
 **/__pycache__/
+.pytest_cache/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
 **/*.pyc
 **/*.pyo
 **/*.pyd
-.pytest_cache/
-.coverage
-htmlcov/
-.git/
+
+# Virtual environments
+.venv/
+
+# dev
 .env
 "**/*.env"
-.vscode
-*.zip
 **/*-secret.yaml
+notes.txt
+
+.git/
+.vscode
 .ruff_cache/
+.pytest_cache/
 
 scripts/
