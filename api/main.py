@@ -13,6 +13,7 @@ from api.routers.media import media_router
 from api.routers.playlists import playlists_router
 from api.routers.agent import agent_router
 from api.routers.discovery import discovery_router
+from api.routers.downloads import downloads_router
 
 # ----------------------------------------------- #
 
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(discovery_router)
     app.include_router(health_router)
     app.include_router(agent_router)
+    app.include_router(downloads_router)
 
     return app
 
