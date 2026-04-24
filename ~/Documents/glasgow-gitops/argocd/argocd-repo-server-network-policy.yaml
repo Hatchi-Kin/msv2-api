@@ -1,0 +1,76 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: argocd-repo-server-network-policy
+  namespace: argocd
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-repo-server
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-server
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-application-controller
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-notifications-controller
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: argocd-applicationset-controller
+    ports:
+    - port: 8081
+      protocol: TCP
+  - from:
+    - namespaceSelector: {}
+    ports:
+    - port: 8084
+      protocol: TCP
+  egress:
+  # Allow DNS queries
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS to external Git repositories (GitHub, GitLab, etc.)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32  # Block AWS metadata
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow HTTP for Git operations
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32
+    ports:
+    - protocol: TCP
+      port: 80
+  # Allow SSH for Git operations
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 169.254.169.254/32
+    ports:
+    - protocol: TCP
+      port: 22
+  # Allow communication within the cluster
+  - to:
+    - podSelector: {}
